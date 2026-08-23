@@ -1,1 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Pacman</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-bottom: 8px;
+      font-size: 1.8rem;
+      color: #58a6ff;
+    }
+    p {
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: #8b949e;
+    }
+    #game-container {
+      position: relative;
+      border: 3px solid #30363d;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    canvas {
+      display: block;
+      background-color: #000;
+      border-radius: 5px;
+    }
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      width: 400px;
+      margin-top: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>🟡 Retro Arcade</h1>
+  <p>Use Arrow Keys or WASD to control Pacman. Eat all dots to win!</p>
+
+  <div id="game-container">
+    <canvas id="canvas" width="400" height="400"></canvas>
+  </div>
+
+  <div class="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Status: <span id="status" style="color: #3fb950;">Playing</span></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const statusEl = document.getElementById('status');
+
+    const tileSize = 20;
+    const speed = 2;
+    let score = 0;
+    let gameOver = false;
+
+    // Simple grid map (1 = Wall, 0 = Dot)
+    const map = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,0,1,0,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,0,1,1,0,0,1,1,0,1,1,0,1,0,1],
+      [1,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,1],
+      [1,1,1,0,1,0,1,1,1,0,0,1,1,1,0,1,0,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,0,1,0,1,1,1,0,1],
+      [1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1],
+      [1,1,1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,1,1,0,0,1,1,1,0,1,1,1,0,1],
+      [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+      [1,0,1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,0,1,0,1,1,1,1,0,1,0,1,1,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    const player = {
+      x: 30,
+      y: 30,
+      dx: 0,
+      dy: 0,
+      nextDx: 0,
+      nextDy: 0,
+      size: 7,
+      mouth: 0.2
+    };
+
+    const ghost = {
+      x: 350,
+      y: 350,
+      dx: -speed,
+      dy: 0,
+      color: '#ff4b4b'
+    };
+
+    function isWall(x, y) {
+      const col = Math.floor(x / tileSize);
+      const row = Math.floor(y / tileSize);
+      return map[row] && map[row][col] === 1;
+    }
+
+    function canMove(x, y, dx, dy) {
+      const margin = 6;
+      const nextX = x + dx;
+      const nextY = y + dy;
+
+      return (
+        !isWall(nextX - margin, nextY - margin) &&
+        !isWall(nextX + margin, nextY - margin) &&
+        !isWall(nextX - margin, nextY + margin) &&
+        !isWall(nextX + margin, nextY + margin)
+      );
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'w') { player.nextDx = 0; player.nextDy = -speed; }
+      if (e.key === 'ArrowDown' || e.key === 's') { player.nextDx = 0; player.nextDy = speed; }
+      if (e.key === 'ArrowLeft' || e.key === 'a') { player.nextDx = -speed; player.nextDy = 0; }
+      if (e.key === 'ArrowRight' || e.key === 'd') { player.nextDx = speed; player.nextDy = 0; }
+    });
+
+    function update() {
+      if (gameOver) return;
+
+      // Try direction buffer
+      if (canMove(player.x, player.y, player.nextDx, player.nextDy)) {
+        player.dx = player.nextDx;
+        player.dy = player.nextDy;
+      }
+
+      // Move player
+      if (canMove(player.x, player.y, player.dx, player.dy)) {
+        player.x += player.dx;
+        player.y += player.dy;
+      }
+
+      // Eat dot
+      const col = Math.floor(player.x / tileSize);
+      const row = Math.floor(player.y / tileSize);
+      if (map[row] && map[row][col] === 0) {
+        map[row][col] = 2; // Empty
+        score += 10;
+        scoreEl.innerText = score;
+      }
+
+      // Ghost movement (simple random wall rebound)
+      if (!canMove(ghost.x, ghost.y, ghost.dx, ghost.dy)) {
+        const dirs = [
+          { dx: speed, dy: 0 },
+          { dx: -speed, dy: 0 },
+          { dx: 0, dy: speed },
+          { dx: 0, dy: -speed }
+        ];
+        const validDirs = dirs.filter(d => canMove(ghost.x, ghost.y, d.dx, d.dy));
+        if (validDirs.length > 0) {
+          const choice = validDirs[Math.floor(Math.random() * validDirs.length)];
+          ghost.dx = choice.dx;
+          ghost.dy = choice.dy;
+        }
+      }
+      ghost.x += ghost.dx;
+      ghost.y += ghost.dy;
+
+      // Collision Check
+      const dist = Math.hypot(player.x - ghost.x, player.y - ghost.y);
+      if (dist < player.size + 6) {
+        gameOver = true;
+        statusEl.innerText = "Game Over!";
+        statusEl.style.color = "#ff4b4b";
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw map
+      for (let r = 0; r < map.length; r++) {
+        for (let c = 0; c < map[r].length; c++) {
+          if (map[r][c] === 1) {
+            ctx.fillStyle = '#1f6beb';
+            ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
+          } else if (map[r][c] === 0) {
+            ctx.fillStyle = '#f0e68c';
+            ctx.beginPath();
+            ctx.arc(c * tileSize + 10, r * tileSize + 10, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // Draw Player (Pacman)
+      ctx.fillStyle = '#ffe600';
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.size, 0.2 * Math.PI, 1.8 * Math.PI);
+      ctx.lineTo(player.x, player.y);
+      ctx.fill();
+
+      // Draw Ghost
+      ctx.fillStyle = ghost.color;
+      ctx.beginPath();
+      ctx.arc(ghost.x, ghost.y - 2, 7, Math.PI, 0, false);
+      ctx.lineTo(ghost.x + 7, ghost.y + 7);
+      ctx.lineTo(ghost.x - 7, ghost.y + 7);
+      ctx.fill();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
