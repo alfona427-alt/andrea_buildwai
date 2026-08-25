@@ -1,247 +1,424 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Project Hub & Directory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚀 Project Hub & Index</title>
+
+  <!-- Favicon using SVG Emoji -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f6ff',
+              100: '#e0edff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              900: '#1e3a8a',
+            },
+            darkbg: '#0d1117',
+            cardbg: '#161b22',
+            cardborder: '#30363d',
+            hoverbg: '#21262d'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg: #0d1117;
-      --card-bg: #161b22;
-      --card-border: #30363d;
-      --card-hover: #21262d;
-      --text: #c9d1d9;
-      --text-heading: #f0f6fc;
-      --accent-blue: #58a6ff;
-      --accent-green: #3fb950;
-      --accent-purple: #bc8cff;
-      --accent-yellow: #d29922;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      padding: 2rem 1rem;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: 'Inter', sans-serif;
+      background-color: #0d1117;
+      color: #c9d1d9;
     }
-
-    .container {
-      max-width: 900px;
-      width: 100%;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    header h1 {
-      font-size: 2.5rem;
-      color: var(--text-heading);
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    header p {
-      font-size: 1.1rem;
-      color: #8b949e;
+    .glass-card {
+      background: rgba(22, 27, 34, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid #30363d;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .badges {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-
-    .badge {
-      background-color: var(--card-bg);
-      border: 1px solid var(--card-border);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--accent-blue);
-    }
-
-    section {
-      margin-bottom: 2.5rem;
-    }
-
-    section h2 {
-      font-size: 1.5rem;
-      color: var(--text-heading);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.2s ease-in-out;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .card:hover {
-      background-color: var(--card-hover);
-      border-color: var(--accent-blue);
+    .glass-card:hover {
+      border-color: #58a6ff;
       transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(88, 166, 255, 0.15);
     }
 
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .card-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text-heading);
-    }
-
-    .card-tag {
-      font-size: 0.75rem;
-      padding: 0.15rem 0.5rem;
-      border-radius: 6px;
-      background: rgba(88, 166, 255, 0.1);
-      color: var(--accent-blue);
-      border: 1px solid rgba(88, 166, 255, 0.2);
-    }
-
-    .card-desc {
-      font-size: 0.9rem;
-      color: #8b949e;
-      margin-bottom: 1rem;
-    }
-
-    .card-link {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--accent-blue);
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    footer {
-      margin-top: auto;
-      text-align: center;
-      padding-top: 2rem;
-      color: #8b949e;
-      font-size: 0.85rem;
+    .badge-glow {
+      box-shadow: 0 0 10px rgba(63, 185, 80, 0.2);
     }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
 
-  <div class="container">
-    <header>
-      <h1>✨ Project Directory</h1>
-      <p>A curated collection of web applications, AI experiments, and games.</p>
-      <div class="badges">
-        <span class="badge">🚀 Live Deployments</span>
-        <span class="badge">⚡ Active Updates</span>
+  <header class="w-full max-w-5xl mx-auto px-4 pt-12 pb-6">
+    <div class="flex flex-col items-center text-center space-y-4">
+      
+      <!-- Interactive Emoji Logo -->
+      <div class="relative group cursor-pointer" onclick="cycleEmoji()" title="Click to change logo emoji!">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-slate-700/80 flex items-center justify-center text-4xl shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:border-blue-500">
+          <span id="logo-emoji">🚀</span>
+        </div>
+        <span class="absolute -bottom-2 right-0 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+          Live
+        </span>
       </div>
-    </header>
 
-    <!-- Games with AI Section -->
-   <section>
-      <h2>🕹️ Games with AI</h2>
-      <div class="grid">
-        <a href="./pacman/" class="card">
-          <div>
-            <div class="card-header">
-              <span class="card-title">🟡 Pacman</span>
-              <span class="card-tag">HTML5 Canvas</span>
-            </div>
-            <p class="card-desc">Classic retro maze arcade game featuring custom ghost pathfinding AI logic.</p>
-          </div>
-          <span class="card-link">Play Game ↗</span>
-        </a>
+      <!-- Title & Subtitle -->
+      <div>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-2">
+          ✨ <span class="gradient-text">Project Hub & Directory</span>
+        </h1>
+        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto font-normal">
+          A curated index of my live apps, experiments, open-source repositories, and digital playgrounds.
+        </p>
       </div>
-    </section>
 
-    <!-- Other Projects Section -->
-    <section>
-      <h2>🌐 Other Web Projects</h2>
-      <div class="grid">
-        <a href="https://example.com" target="_blank" class="card">
-          <div>
-            <div class="card-header">
-              <span class="card-title">⚡ AI Lab</span>
-              <span class="card-tag" style="color: var(--accent-purple); border-color: rgba(188, 140, 255, 0.2); background: rgba(188, 140, 255, 0.1);">Experimental</span>
-            </div>
-            <p class="card-desc">Interactive sandbox demonstrating custom machine learning & AI web models.</p>
-          </div>
-          <span class="card-link" style="color: var(--accent-purple);">Launch Site ↗</span>
-        </a>
-
-        <a href="https://example.com" target="_blank" class="card">
-          <div>
-            <div class="card-header">
-              <span class="card-title">🎨 UI Kit</span>
-              <span class="card-tag" style="color: var(--accent-green); border-color: rgba(63, 185, 80, 0.2); background: rgba(63, 185, 80, 0.1);">Design</span>
-            </div>
-            <p class="card-desc">Minimalist dark theme component library for modern web applications.</p>
-          </div>
-          <span class="card-link" style="color: var(--accent-green);">View Design ↗</span>
-        </a>
+      <!-- Live Badges -->
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 badge-glow">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Active Deployments
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30">
+          ⚡ Maintained 2026
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/30">
+          📊 <span id="project-count">0</span> Projects Listed
+        </span>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <!-- Docs & Resources Section -->
-    <section>
-      <h2>🛠️ Resources & Notes</h2>
-      <div class="grid">
-        <a href="https://example.com" target="_blank" class="card">
-          <div>
-            <div class="card-header">
-              <span class="card-title">📝 Docs</span>
-              <span class="card-tag" style="color: var(--accent-yellow); border-color: rgba(210, 153, 34, 0.2); background: rgba(210, 153, 34, 0.1);">Guide</span>
-            </div>
-            <p class="card-desc">Development notes, cheat sheets, and setup guides for projects.</p>
-          </div>
-          <span class="card-link" style="color: var(--accent-yellow);">Read Notes ↗</span>
-        </a>
+  <main class="w-full max-w-5xl mx-auto px-4 py-6 flex-grow">
+    
+    <!-- Controls Container -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[#161b22] p-3 rounded-2xl border border-[#30363d]">
+      
+      <!-- Search Input -->
+      <div class="relative w-full sm:w-72">
+        <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input 
+          type="text" 
+          id="search-input"
+          oninput="filterProjects()"
+          placeholder="Search projects or tech stack..." 
+          class="w-full bg-[#0d1117] border border-[#30363d] focus:border-blue-500 focus:outline-none rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 transition-colors"
+        />
       </div>
-    </section>
 
-    <footer>
-      <p>Built with HTML & CSS • Ready for GitHub Pages</p>
-    </footer>
-  </div>
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto" id="filter-tabs">
+        <button onclick="setFilter('all')" data-category="all" class="filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-600 text-white">All</button>
+        <button onclick="setFilter('featured')" data-category="featured" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🚀 Featured</button>
+        <button onclick="setFilter('games')" data-category="games" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🕹️ Games</button>
+        <button onclick="setFilter('creative')" data-category="creative" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🎨 Creative</button>
+        <button onclick="setFilter('tools')" data-category="tools" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🛠️ Tools</button>
+      </div>
+    </div>
 
+    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Projects will be dynamically generated by JS below -->
+    </div>
+
+    <!-- Empty state message -->
+    <div id="no-results" class="hidden text-center py-16 bg-[#161b22] border border-[#30363d] rounded-2xl mt-4">
+      <span class="text-4xl block mb-2">🔍</span>
+      <h3 class="text-lg font-medium text-slate-300">No projects found</h3>
+      <p class="text-sm text-slate-500 mt-1">Try adjusting your search or category filter.</p>
+    </div>
+
+    <div class="mt-10 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start sm:items-center gap-3">
+      <div class="text-2xl flex-shrink-0">💡</div>
+      <div class="text-xs sm:text-sm text-slate-300">
+        <strong class="text-blue-400 font-semibold">Pro Tip:</strong> Click any card's external icon <span class="text-blue-400 font-mono">↗</span> to visit the live app directly. Click the main top logo icon to change your default emoji!
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full border-t border-[#30363d] bg-[#161b22]/50 mt-12 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>Built with ❤️ • Updated August 2026</p>
+      <div class="flex items-center gap-4">
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">GitHub ↗</a>
+        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">Twitter / X ↗</a>
+        <a href="mailto:example@domain.com" class="hover:text-slate-300 transition-colors">Contact ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ----------------------------------------------------
+    // PROJECT DATA CONFIGURATION
+    // Replace links and details below with your own projects!
+    // ----------------------------------------------------
+    const projects = [
+      {
+        id: "pacman",
+        title: "Pacman AI Game",
+        emoji: "🟡",
+        category: "games",
+        categoryTag: "Games with AI",
+        description: "Classic retro maze arcade game featuring custom ghost pathfinding AI logic and smooth controls.",
+        tech: ["HTML5", "Canvas", "JavaScript"],
+        url: "./pacman/index.html",
+        status: "Playable"
+      },
+      {
+        id: "portfolio",
+        title: "Portfolio Site",
+        emoji: "🌐",
+        category: "featured",
+        categoryTag: "Personal",
+        description: "Personal responsive showcase website highlighting modern frontend architecture and clean design.",
+        tech: ["React", "Tailwind", "Vite"],
+        url: "https://your-link-here.com",
+        status: "Live"
+      },
+      {
+        id: "dev-dashboard",
+        title: "Dev Dashboard",
+        emoji: "⚡",
+        category: "featured",
+        categoryTag: "Productivity",
+        description: "Comprehensive developer statistics dashboard with GitHub API integrations and live build status.",
+        tech: ["Next.js", "TypeScript", "Tailwind"],
+        url: "https://your-link-here.com",
+        status: "Live"
+      },
+      {
+        id: "ai-art-hub",
+        title: "AI Art Hub",
+        emoji: "🤖",
+        category: "featured",
+        categoryTag: "Creative AI",
+        description: "Web application serving creative AI prompt generation and generative model gallery displays.",
+        tech: ["Python", "FastAPI", "React"],
+        url: "https://your-link-here.com",
+        status: "Live"
+      },
+      {
+        id: "figma-ui-kit",
+        title: "Figma Component UI Kit",
+        emoji: "🎨",
+        category: "creative",
+        categoryTag: "Design System",
+        description: "Open-source comprehensive Figma UI kit designed for rapid web app prototyping and wireframing.",
+        tech: ["Figma", "Design", "Tokens"],
+        url: "https://your-link-here.com",
+        status: "Updated"
+      },
+      {
+        id: "shader-lab",
+        title: "Interactive Shader Lab",
+        emoji: "✨",
+        category: "creative",
+        categoryTag: "WebGL / 3D",
+        description: "Interactive WebGL visual playground with customizable shaders and real-time particle rendering.",
+        tech: ["Three.js", "GLSL", "JavaScript"],
+        url: "https://your-link-here.com",
+        status: "Experimental"
+      },
+      {
+        id: "minimalist-blog",
+        title: "Minimalist Tech Blog",
+        emoji: "✍️",
+        category: "creative",
+        categoryTag: "Writing",
+        description: "Articles and deep dives on software architecture, design systems, and modern web development trends.",
+        tech: ["Astro", "Markdown", "Tailwind"],
+        url: "https://your-link-here.com",
+        status: "Live"
+      },
+      {
+        id: "api-testing-suite",
+        title: "API Testing Suite",
+        emoji: "🌐",
+        category: "tools",
+        categoryTag: "Developer Tool",
+        description: "Browser-based sandbox for testing RESTful and GraphQL endpoints quickly with JSON formatting.",
+        tech: ["TypeScript", "Vue", "WebSockets"],
+        url: "https://your-link-here.com",
+        status: "Tool"
+      },
+      {
+        id: "color-generator",
+        title: "Color Palette Generator",
+        emoji: "⚡",
+        category: "tools",
+        categoryTag: "Design Tool",
+        description: "Ultra-fast accessible color palette generator providing copy-ready Tailwind CSS and CSS variables.",
+        tech: ["JavaScript", "CSS", "HTML5"],
+        url: "https://your-link-here.com",
+        status: "Tool"
+      },
+      {
+        id: "markdown-snippets",
+        title: "Markdown Snippets",
+        emoji: "📝",
+        category: "tools",
+        categoryTag: "Resources",
+        description: "Curated library of ready-to-use Markdown boilerplates, badges, and Readme template layouts.",
+        tech: ["Markdown", "Documentation"],
+        url: "https://your-link-here.com",
+        status: "Resource"
+      }
+    ];
+
+    let currentCategory = 'all';
+
+    function renderProjects() {
+      const grid = document.getElementById('projects-grid');
+      const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+      const noResults = document.getElementById('no-results');
+
+      grid.innerHTML = '';
+      
+      const filtered = projects.filter(p => {
+        const matchesCat = (currentCategory === 'all') || (p.category === currentCategory);
+        const matchesSearch = p.title.toLowerCase().includes(searchVal) || 
+                              p.description.toLowerCase().includes(searchVal) ||
+                              p.tech.some(t => t.toLowerCase().includes(searchVal)) ||
+                              p.categoryTag.toLowerCase().includes(searchVal);
+        return matchesCat && matchesSearch;
+      });
+
+      document.getElementById('project-count').innerText = projects.length;
+
+      if (filtered.length === 0) {
+        noResults.classList.remove('hidden');
+      } else {
+        noResults.classList.add('hidden');
+      }
+
+      filtered.forEach(project => {
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-5 flex flex-col justify-between group";
+        
+        const techBadges = project.tech.map(t => 
+          `<span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono border border-slate-700">${t}</span>`
+        ).join('');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 shadow-inner group-hover:scale-110 transition-transform">
+                  ${project.emoji}
+                </span>
+                <div>
+                  <h3 class="text-base font-bold text-white group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                    ${project.title}
+                  </h3>
+                  <span class="text-[11px] text-blue-400 font-medium">
+                    ${project.categoryTag}
+                  </span>
+                </div>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                ${project.status}
+              </span>
+            </div>
+            
+            <p class="text-xs text-slate-400 leading-relaxed mb-4">
+              ${project.description}
+            </p>
+          </div>
+
+          <div>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              ${techBadges}
+            </div>
+
+            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+              <a href="${project.url}" ${project.url.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} 
+                 class="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+                Launch / Visit <span class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+              </a>
+              <button onclick="copyProjectLink('${project.url}', this)" title="Copy link" class="text-xs text-slate-500 hover:text-slate-300 transition-colors px-2 py-1 rounded bg-slate-800/40 hover:bg-slate-800">
+                📋 Share
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setFilter(category) {
+      currentCategory = category;
+      const buttons = document.querySelectorAll('.filter-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('data-category') === category) {
+          btn.className = "filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-600/30";
+        } else {
+          btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]";
+        }
+      });
+      renderProjects();
+    }
+
+    function filterProjects() {
+      renderProjects();
+    }
+
+    // Cycle through emojis for fun logo customization
+    const emojis = ["🚀", "✨", "⚡", "🔮", "💻", "🌐", "🛠️", "🎯", "🔥"];
+    let emojiIndex = 0;
+    function cycleEmoji() {
+      emojiIndex = (emojiIndex + 1) % emojis.length;
+      document.getElementById('logo-emoji').innerText = emojis[emojiIndex];
+    }
+
+    // Copy link helper
+    function copyProjectLink(url, btnElement) {
+      const originalText = btnElement.innerText;
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      btnElement.innerText = '✅ Copied!';
+      btnElement.classList.add('text-emerald-400');
+      setTimeout(() => {
+        btnElement.innerText = originalText;
+        btnElement.classList.remove('text-emerald-400');
+      }, 1800);
+    }
+
+    // Initial render
+    window.onload = function() {
+      renderProjects();
+    };
+  </script>
 </body>
 </html>
