@@ -1,33 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> Project Hub & Index</title>
+  <title>Project Hub & Index</title>
 
   <!-- Favicon using SVG Emoji -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0f6ff',
-              100: '#e0edff',
-              500: '#3b82f6',
-              600: '#2563eb',
-              900: '#1e3a8a',
-            },
-            darkbg: '#0d1117',
-            cardbg: '#161b22',
-            cardborder: '#30363d',
-            hoverbg: '#21262d'
+            pastel: {
+              bg: '#f4f7fb',
+              card: '#ffffff',
+              border: '#e2e8f0',
+              accent: '#bfdbfe',
+              blue: '#3b82f6',
+              textPrimary: '#1e293b',
+              textMuted: '#64748b',
+              hover: '#f1f5f9'
+            }
           }
         }
       }
@@ -42,83 +39,88 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #0d1117;
-      color: #c9d1d9;
+      background-color: #f0f4f9;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.7) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(224, 231, 255, 0.6) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #334155;
     }
     
-    .gradient-text {
-      background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    .pastel-gradient-text {
+      background: linear-gradient(135deg, #2563eb, #60a5fa, #93c5fd);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .glass-card {
-      background: rgba(22, 27, 34, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid #30363d;
+    .pastel-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.1), 0 8px 10px -6px rgba(148, 163, 184, 0.05);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .glass-card:hover {
-      border-color: #58a6ff;
+    .pastel-card:hover {
+      border-color: #93c5fd;
       transform: translateY(-3px);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px rgba(88, 166, 255, 0.15);
+      box-shadow: 0 20px 30px -10px rgba(147, 197, 253, 0.3);
     }
 
     .badge-glow {
-      box-shadow: 0 0 10px rgba(63, 185, 80, 0.2);
+      box-shadow: 0 0 12px rgba(96, 165, 250, 0.25);
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-100 selection:text-blue-900">
 
-  <header class="w-full max-w-5xl mx-auto px-4 pt-12 pb-6">
+  <header class="w-full max-w-4xl mx-auto px-4 pt-12 pb-6">
     <div class="flex flex-col items-center text-center space-y-4">
       
       <!-- Interactive Emoji Logo -->
       <div class="relative group cursor-pointer" onclick="cycleEmoji()" title="Click to change logo emoji!">
-        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600/20 via-purple-600/20 to-pink-600/20 border border-slate-700/80 flex items-center justify-center text-4xl shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:border-blue-500">
-          <span id="logo-emoji">🚀</span>
+        <div class="w-20 h-20 rounded-3xl bg-white/80 backdrop-blur border border-blue-100 flex items-center justify-center text-4xl shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-blue-200/50 group-hover:border-blue-300">
+          <span id="logo-emoji">👾</span>
         </div>
-        <span class="absolute -bottom-2 right-0 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+        <span class="absolute -bottom-1.5 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
           Live
         </span>
       </div>
 
       <!-- Title & Subtitle -->
       <div>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-2">
-          ✨ <span class="gradient-text">Project Hub & Directory</span>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-800 mb-2">
+          ✨ <span class="pastel-gradient-text">Project Hub</span>
         </h1>
-        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto font-normal">
-          A curated index of my live apps, experiments, open-source repositories, and digital playgrounds.
+        <p class="text-slate-500 text-sm sm:text-base max-w-md mx-auto font-normal">
+          A clean, minimal index for active projects and interactive web games.
         </p>
       </div>
 
       <!-- Live Badges -->
       <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 badge-glow">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50/80 text-emerald-600 border border-emerald-200/60 badge-glow">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Active Deployments
+          Active Deployment
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-          ⚡ Maintained 2026
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50/80 text-blue-600 border border-blue-200/60">
+          ⚡ Maintained
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/30">
-          📊 <span id="project-count">0</span> Projects Listed
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-50/80 text-indigo-600 border border-indigo-200/60">
+          📊 <span id="project-count">1</span> Project Listed
         </span>
       </div>
     </div>
   </header>
 
-  <main class="w-full max-w-5xl mx-auto px-4 py-6 flex-grow">
+  <main class="w-full max-w-4xl mx-auto px-4 py-6 flex-grow">
     
     <!-- Controls Container -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[#161b22] p-3 rounded-2xl border border-[#30363d]">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white/70 backdrop-blur p-3 rounded-2xl border border-white shadow-sm">
       
       <!-- Search Input -->
       <div class="relative w-full sm:w-72">
-        <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
         <input 
@@ -126,54 +128,46 @@
           id="search-input"
           oninput="filterProjects()"
           placeholder="Search projects or tech stack..." 
-          class="w-full bg-[#0d1117] border border-[#30363d] focus:border-blue-500 focus:outline-none rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 transition-colors"
+          class="w-full bg-slate-50 border border-slate-200 focus:border-blue-400 focus:bg-white focus:outline-none rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 placeholder-slate-400 transition-all"
         />
       </div>
 
       <!-- Filter Buttons -->
       <div class="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto" id="filter-tabs">
-        <button onclick="setFilter('all')" data-category="all" class="filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-600 text-white">All</button>
-        <button onclick="setFilter('featured')" data-category="featured" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🚀 Featured</button>
-        <button onclick="setFilter('games')" data-category="games" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🕹️ Games</button>
-        <button onclick="setFilter('creative')" data-category="creative" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🎨 Creative</button>
-        <button onclick="setFilter('tools')" data-category="tools" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]">🛠️ Tools</button>
+        <button onclick="setFilter('all')" data-category="all" class="filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-500 text-white shadow-sm shadow-blue-300">All</button>
+        <button onclick="setFilter('games')" data-category="games" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100">🕹️ Games</button>
       </div>
     </div>
 
-    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <!-- Grid Container -->
+    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Projects will be dynamically generated by JS below -->
     </div>
 
     <!-- Empty state message -->
-    <div id="no-results" class="hidden text-center py-16 bg-[#161b22] border border-[#30363d] rounded-2xl mt-4">
+    <div id="no-results" class="hidden text-center py-16 bg-white/80 border border-slate-200 rounded-2xl mt-4 shadow-sm">
       <span class="text-4xl block mb-2">🔍</span>
-      <h3 class="text-lg font-medium text-slate-300">No projects found</h3>
-      <p class="text-sm text-slate-500 mt-1">Try adjusting your search or category filter.</p>
+      <h3 class="text-lg font-medium text-slate-700">No projects found</h3>
+      <p class="text-sm text-slate-400 mt-1">Try adjusting your search query.</p>
     </div>
 
-    <div class="mt-10 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start sm:items-center gap-3">
+    <div class="mt-10 p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start sm:items-center gap-3">
       <div class="text-2xl flex-shrink-0">💡</div>
-      <div class="text-xs sm:text-sm text-slate-300">
-        <strong class="text-blue-400 font-semibold">Pro Tip:</strong> Click any card's external icon <span class="text-blue-400 font-mono">↗</span> to visit the live app directly. Click the main top logo icon to change your default emoji!
+      <div class="text-xs sm:text-sm text-slate-600">
+        <strong class="text-blue-600 font-semibold">Pro Tip:</strong> Click on <span class="text-blue-600 font-semibold">Play / Launch ↗</span> to launch the Pacman game directly.
       </div>
     </div>
   </main>
 
-  <footer class="w-full border-t border-[#30363d] bg-[#161b22]/50 mt-12 py-6 text-center text-xs text-slate-500">
-    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <p>Built with ❤️ • Updated August 2026</p>
-      <div class="flex items-center gap-4">
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">GitHub ↗</a>
-        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-300 transition-colors">Twitter / X ↗</a>
-        <a href="mailto:example@domain.com" class="hover:text-slate-300 transition-colors">Contact ↗</a>
-      </div>
+  <footer class="w-full border-t border-slate-200/80 bg-white/40 backdrop-blur mt-12 py-6 text-center text-xs text-slate-400">
+    <div class="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+      <p>Built with ❤️ • Updated 2026</p>
     </div>
   </footer>
 
   <script>
     // ----------------------------------------------------
     // PROJECT DATA CONFIGURATION
-    // Replace links and details below with your own projects!
     // ----------------------------------------------------
     const projects = [
       {
@@ -181,110 +175,11 @@
         title: "Pacman AI Game",
         emoji: "🟡",
         category: "games",
-        categoryTag: "Games with AI",
+        categoryTag: "Arcade Game",
         description: "Classic retro maze arcade game featuring custom ghost pathfinding AI logic and smooth controls.",
         tech: ["HTML5", "Canvas", "JavaScript"],
         url: "./pacman/index.html",
         status: "Playable"
-      },
-      {
-        id: "portfolio",
-        title: "Portfolio Site",
-        emoji: "🌐",
-        category: "featured",
-        categoryTag: "Personal",
-        description: "Personal responsive showcase website highlighting modern frontend architecture and clean design.",
-        tech: ["React", "Tailwind", "Vite"],
-        url: "https://your-link-here.com",
-        status: "Live"
-      },
-      {
-        id: "dev-dashboard",
-        title: "Dev Dashboard",
-        emoji: "⚡",
-        category: "featured",
-        categoryTag: "Productivity",
-        description: "Comprehensive developer statistics dashboard with GitHub API integrations and live build status.",
-        tech: ["Next.js", "TypeScript", "Tailwind"],
-        url: "https://your-link-here.com",
-        status: "Live"
-      },
-      {
-        id: "ai-art-hub",
-        title: "AI Art Hub",
-        emoji: "🤖",
-        category: "featured",
-        categoryTag: "Creative AI",
-        description: "Web application serving creative AI prompt generation and generative model gallery displays.",
-        tech: ["Python", "FastAPI", "React"],
-        url: "https://your-link-here.com",
-        status: "Live"
-      },
-      {
-        id: "figma-ui-kit",
-        title: "Figma Component UI Kit",
-        emoji: "🎨",
-        category: "creative",
-        categoryTag: "Design System",
-        description: "Open-source comprehensive Figma UI kit designed for rapid web app prototyping and wireframing.",
-        tech: ["Figma", "Design", "Tokens"],
-        url: "https://your-link-here.com",
-        status: "Updated"
-      },
-      {
-        id: "shader-lab",
-        title: "Interactive Shader Lab",
-        emoji: "✨",
-        category: "creative",
-        categoryTag: "WebGL / 3D",
-        description: "Interactive WebGL visual playground with customizable shaders and real-time particle rendering.",
-        tech: ["Three.js", "GLSL", "JavaScript"],
-        url: "https://your-link-here.com",
-        status: "Experimental"
-      },
-      {
-        id: "minimalist-blog",
-        title: "Minimalist Tech Blog",
-        emoji: "✍️",
-        category: "creative",
-        categoryTag: "Writing",
-        description: "Articles and deep dives on software architecture, design systems, and modern web development trends.",
-        tech: ["Astro", "Markdown", "Tailwind"],
-        url: "https://your-link-here.com",
-        status: "Live"
-      },
-      {
-        id: "api-testing-suite",
-        title: "API Testing Suite",
-        emoji: "🌐",
-        category: "tools",
-        categoryTag: "Developer Tool",
-        description: "Browser-based sandbox for testing RESTful and GraphQL endpoints quickly with JSON formatting.",
-        tech: ["TypeScript", "Vue", "WebSockets"],
-        url: "https://your-link-here.com",
-        status: "Tool"
-      },
-      {
-        id: "color-generator",
-        title: "Color Palette Generator",
-        emoji: "⚡",
-        category: "tools",
-        categoryTag: "Design Tool",
-        description: "Ultra-fast accessible color palette generator providing copy-ready Tailwind CSS and CSS variables.",
-        tech: ["JavaScript", "CSS", "HTML5"],
-        url: "https://your-link-here.com",
-        status: "Tool"
-      },
-      {
-        id: "markdown-snippets",
-        title: "Markdown Snippets",
-        emoji: "📝",
-        category: "tools",
-        categoryTag: "Resources",
-        description: "Curated library of ready-to-use Markdown boilerplates, badges, and Readme template layouts.",
-        tech: ["Markdown", "Documentation"],
-        url: "https://your-link-here.com",
-        status: "Resource"
       }
     ];
 
@@ -316,34 +211,34 @@
 
       filtered.forEach(project => {
         const card = document.createElement('div');
-        card.className = "glass-card rounded-2xl p-5 flex flex-col justify-between group";
+        card.className = "pastel-card rounded-2xl p-5 flex flex-col justify-between group";
         
         const techBadges = project.tech.map(t => 
-          `<span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono border border-slate-700">${t}</span>`
+          `<span class="text-[11px] px-2.5 py-0.5 rounded-md bg-blue-50/80 text-blue-600 font-mono border border-blue-100">${t}</span>`
         ).join('');
 
         card.innerHTML = `
           <div>
             <div class="flex items-start justify-between gap-2 mb-3">
-              <div class="flex items-center gap-2.5">
-                <span class="text-2xl p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 shadow-inner group-hover:scale-110 transition-transform">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl p-2.5 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner group-hover:scale-110 transition-transform">
                   ${project.emoji}
                 </span>
                 <div>
-                  <h3 class="text-base font-bold text-white group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                  <h3 class="text-base font-bold text-slate-800 group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
                     ${project.title}
                   </h3>
-                  <span class="text-[11px] text-blue-400 font-medium">
+                  <span class="text-[11px] text-blue-500 font-medium">
                     ${project.categoryTag}
                   </span>
                 </div>
               </div>
-              <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+              <span class="text-[10px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
                 ${project.status}
               </span>
             </div>
             
-            <p class="text-xs text-slate-400 leading-relaxed mb-4">
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">
               ${project.description}
             </p>
           </div>
@@ -353,12 +248,12 @@
               ${techBadges}
             </div>
 
-            <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
               <a href="${project.url}" ${project.url.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} 
-                 class="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors">
-                Launch / Visit <span class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+                 class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all shadow-sm shadow-blue-200">
+                Play / Launch <span class="group-hover:translate-x-0.5 transition-transform">↗</span>
               </a>
-              <button onclick="copyProjectLink('${project.url}', this)" title="Copy link" class="text-xs text-slate-500 hover:text-slate-300 transition-colors px-2 py-1 rounded bg-slate-800/40 hover:bg-slate-800">
+              <button onclick="copyProjectLink('${project.url}', this)" title="Copy link" class="text-xs text-slate-400 hover:text-slate-600 transition-colors px-2 py-1 rounded-md bg-slate-100/60 hover:bg-slate-100">
                 📋 Share
               </button>
             </div>
@@ -373,9 +268,9 @@
       const buttons = document.querySelectorAll('.filter-btn');
       buttons.forEach(btn => {
         if (btn.getAttribute('data-category') === category) {
-          btn.className = "filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-600 text-white shadow-md shadow-blue-600/30";
+          btn.className = "filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-500 text-white shadow-sm shadow-blue-300";
         } else {
-          btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-white hover:bg-[#21262d]";
+          btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100";
         }
       });
       renderProjects();
@@ -386,7 +281,7 @@
     }
 
     // Cycle through emojis for fun logo customization
-    const emojis = ["🚀", "✨", "⚡", "🔮", "💻", "🌐", "🛠️", "🎯", "🔥"];
+    const emojis = ["👾", "🟡", "🕹️", "⚡", "🚀", "🎮"];
     let emojiIndex = 0;
     function cycleEmoji() {
       emojiIndex = (emojiIndex + 1) % emojis.length;
@@ -409,10 +304,10 @@
       }
 
       btnElement.innerText = '✅ Copied!';
-      btnElement.classList.add('text-emerald-400');
+      btnElement.classList.add('text-emerald-500');
       setTimeout(() => {
         btnElement.innerText = originalText;
-        btnElement.classList.remove('text-emerald-400');
+        btnElement.classList.remove('text-emerald-500');
       }, 1800);
     }
 
