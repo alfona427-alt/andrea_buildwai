@@ -12,58 +12,159 @@
       padding: 0;
     }
     body {
-      background-color: #0d1117;
-      color: #c9d1d9;
+      background-color: #f0f4f9;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.7) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(224, 231, 255, 0.6) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #334155;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      padding: 16px;
     }
+
+    /* Navigation Back Button */
+    .nav-header {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #2563eb;
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(148, 163, 184, 0.15);
+      transition: all 0.2s ease;
+    }
+    .back-btn:hover {
+      background-color: #ffffff;
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(147, 197, 253, 0.3);
+    }
+
     h1 {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-size: 1.8rem;
-      color: #58a6ff;
+      color: #1e293b;
     }
     p {
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-      color: #8b949e;
+      margin-bottom: 20px;
+      font-size: 0.875rem;
+      color: #64748b;
+      text-align: center;
     }
     #game-container {
       position: relative;
-      border: 3px solid #30363d;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border: 4px solid #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.25);
+      overflow: hidden;
+      background-color: #0d1117;
     }
     canvas {
       display: block;
-      background-color: #000;
-      border-radius: 5px;
+      background-color: #0d1117;
     }
+
+    /* Game Over / Victory Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.88);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 10;
+      transition: opacity 0.2s ease;
+    }
+    .overlay.hidden {
+      display: none;
+    }
+    .overlay-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+    .restart-btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ffffff;
+      background-color: #2563eb;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      transition: all 0.2s ease;
+    }
+    .restart-btn:hover {
+      background-color: #1d4ed8;
+      transform: scale(1.05);
+    }
+
     .hud {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       width: 400px;
-      margin-top: 12px;
-      font-weight: bold;
-      font-size: 1.1rem;
+      max-width: 100%;
+      margin-top: 16px;
+      padding: 12px 18px;
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(148, 163, 184, 0.1);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #334155;
     }
   </style>
 </head>
 <body>
+
+  <!-- Navigation Header with Home Button -->
+  <div class="nav-header">
+    <a href="../index.html" class="back-btn">
+      ← Back to Home
+    </a>
+  </div>
 
   <h1>🟡 Retro Arcade</h1>
   <p>Use Arrow Keys or WASD to control Pacman. Eat all dots to win!</p>
 
   <div id="game-container">
     <canvas id="canvas" width="400" height="400"></canvas>
+    
+    <!-- Win/Loss Overlay -->
+    <div id="game-overlay" class="overlay hidden">
+      <div id="overlay-msg" class="overlay-title">You Won!</div>
+      <button class="restart-btn" onclick="restartGame()">🎮 Play Again</button>
+    </div>
   </div>
 
   <div class="hud">
-    <div>Score: <span id="score">0</span></div>
-    <div>Status: <span id="status" style="color: #3fb950;">Playing</span></div>
+    <div>Score: <span id="score" style="color: #2563eb;">0</span></div>
+    <div>Status: <span id="status" style="color: #16a34a;">Playing</span></div>
   </div>
 
   <script>
@@ -71,14 +172,16 @@
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
     const statusEl = document.getElementById('status');
+    const overlay = document.getElementById('game-overlay');
+    const overlayMsg = document.getElementById('overlay-msg');
 
     const tileSize = 20;
     const speed = 2;
     let score = 0;
     let gameOver = false;
 
-    // Simple grid map (1 = Wall, 0 = Dot)
-    const map = [
+    // Original grid map template (1 = Wall, 0 = Dot)
+    const initialMap = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
       [1,0,1,1,1,0,1,0,1,1,1,1,0,1,0,1,1,1,0,1],
@@ -99,6 +202,8 @@
       [1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ];
+
+    let map = [];
 
     const player = {
       x: 30,
@@ -138,12 +243,64 @@
       );
     }
 
+    function countRemainingDots() {
+      let count = 0;
+      for (let r = 0; r < map.length; r++) {
+        for (let c = 0; c < map[r].length; c++) {
+          if (map[r][c] === 0) count++;
+        }
+      }
+      return count;
+    }
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp' || e.key === 'w') { player.nextDx = 0; player.nextDy = -speed; }
       if (e.key === 'ArrowDown' || e.key === 's') { player.nextDx = 0; player.nextDy = speed; }
       if (e.key === 'ArrowLeft' || e.key === 'a') { player.nextDx = -speed; player.nextDy = 0; }
       if (e.key === 'ArrowRight' || e.key === 'd') { player.nextDx = speed; player.nextDy = 0; }
     });
+
+    function endGame(isWin) {
+      gameOver = true;
+      overlay.classList.remove('hidden');
+
+      if (isWin) {
+        statusEl.innerText = "You Won!";
+        statusEl.style.color = "#16a34a";
+        overlayMsg.innerText = "🎉 You Won!";
+        overlayMsg.style.color = "#4ade80";
+      } else {
+        statusEl.innerText = "You Died!";
+        statusEl.style.color = "#dc2626";
+        overlayMsg.innerText = "💀 You Died!";
+        overlayMsg.style.color = "#f87171";
+      }
+    }
+
+    function restartGame() {
+      // Reset map state
+      map = initialMap.map(row => [...row]);
+      score = 0;
+      gameOver = false;
+      scoreEl.innerText = score;
+      statusEl.innerText = "Playing";
+      statusEl.style.color = "#16a34a";
+      overlay.classList.add('hidden');
+
+      // Reset Player
+      player.x = 30;
+      player.y = 30;
+      player.dx = 0;
+      player.dy = 0;
+      player.nextDx = 0;
+      player.nextDy = 0;
+
+      // Reset Ghost
+      ghost.x = 350;
+      ghost.y = 350;
+      ghost.dx = -speed;
+      ghost.dy = 0;
+    }
 
     function update() {
       if (gameOver) return;
@@ -167,6 +324,12 @@
         map[row][col] = 2; // Empty
         score += 10;
         scoreEl.innerText = score;
+
+        // Check if all dots are eaten
+        if (countRemainingDots() === 0) {
+          endGame(true);
+          return;
+        }
       }
 
       // Ghost movement (simple random wall rebound)
@@ -187,12 +350,10 @@
       ghost.x += ghost.dx;
       ghost.y += ghost.dy;
 
-      // Collision Check
+      // Collision Check with Ghost
       const dist = Math.hypot(player.x - ghost.x, player.y - ghost.y);
       if (dist < player.size + 6) {
-        gameOver = true;
-        statusEl.innerText = "Game Over!";
-        statusEl.style.color = "#ff4b4b";
+        endGame(false);
       }
     }
 
@@ -203,7 +364,7 @@
       for (let r = 0; r < map.length; r++) {
         for (let c = 0; c < map[r].length; c++) {
           if (map[r][c] === 1) {
-            ctx.fillStyle = '#1f6beb';
+            ctx.fillStyle = '#2563eb';
             ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
           } else if (map[r][c] === 0) {
             ctx.fillStyle = '#f0e68c';
@@ -236,6 +397,8 @@
       requestAnimationFrame(loop);
     }
 
+    // Initialize game
+    restartGame();
     loop();
   </script>
 </body>
