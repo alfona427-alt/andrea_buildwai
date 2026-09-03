@@ -107,7 +107,7 @@
           ⚡ Maintained
         </span>
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-50/80 text-indigo-600 border border-indigo-200/60">
-          📊 <span id="project-count">1</span> Project Listed
+          📊 <span id="project-count">0</span> Projects Listed
         </span>
       </div>
     </div>
@@ -132,10 +132,11 @@
         />
       </div>
 
-      <!-- Filter Buttons -->
+      <!-- Filter Buttons (Includes All, Games, and Apps) -->
       <div class="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto" id="filter-tabs">
         <button onclick="setFilter('all')" data-category="all" class="filter-btn active-tab px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-blue-500 text-white shadow-sm shadow-blue-300">All</button>
         <button onclick="setFilter('games')" data-category="games" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100">🕹️ Games</button>
+        <button onclick="setFilter('apps')" data-category="apps" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100">🎬 Apps</button>
       </div>
     </div>
 
@@ -154,7 +155,7 @@
     <div class="mt-10 p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start sm:items-center gap-3">
       <div class="text-2xl flex-shrink-0">💡</div>
       <div class="text-xs sm:text-sm text-slate-600">
-        <strong class="text-blue-600 font-semibold">Pro Tip:</strong> Click on <span class="text-blue-600 font-semibold">Play / Launch ↗</span> to launch the Pacman game directly.
+        <strong class="text-blue-600 font-semibold">Pro Tip:</strong> Click on <span class="text-blue-600 font-semibold">Play / Launch ↗</span> to test out any project directly!
       </div>
     </div>
   </main>
@@ -180,6 +181,17 @@
         tech: ["HTML5", "Canvas", "JavaScript"],
         url: "./pacman/index.html",
         status: "Playable"
+      },
+      {
+        id: "movie_rater",
+        title: "Movie Watchlist Hub",
+        emoji: "🍿",
+        category: "apps",
+        categoryTag: "Web App",
+        description: "A shared movie rating web app where users can save reviews, star ratings, and browse recommendations.",
+        tech: ["HTML5", "Tailwind", "JavaScript"],
+        url: "./movie_rater/index.html",
+        status: "Live"
       }
     ];
 
@@ -281,7 +293,7 @@
     }
 
     // Cycle through emojis for fun logo customization
-    const emojis = ["👾", "🟡", "🕹️", "⚡", "🚀", "🎮"];
+    const emojis = ["👾", "🍿", "🕹️", "⚡", "🚀", "🎮"];
     let emojiIndex = 0;
     function cycleEmoji() {
       emojiIndex = (emojiIndex + 1) % emojis.length;
