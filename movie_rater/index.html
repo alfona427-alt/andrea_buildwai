@@ -312,164 +312,134 @@
       renderReviews();
     }
 
-    // Render Function
-    function renderReviews() {
-      const grid = document.getElementById('reviews-grid');
-      const emptyState = document.getElementById('empty-state');
-      const paginationContainer = document.getElementById('pagination-container');
-      const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
-      const genreVal = document.getElementById('genre-filter').value;
-      const sortVal = document.getElementById('sort-select').value;
+// Render Function
+function renderReviews() {
+  const grid = document.getElementById('reviews-grid');
+  const emptyState = document.getElementById('empty-state');
+  const paginationContainer = document.getElementById('pagination-container');
+  const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+  const genreVal = document.getElementById('genre-filter').value;
+  const sortVal = document.getElementById('sort-select').value;
 
-      document.getElementById('review-count-badge').innerText = reviewsList.length;
+  document.getElementById('review-count-badge').innerText = reviewsList.length;
 
-      // Filter Logic
-      let filtered = reviewsList.filter(item => {
-        const matchesSearch = (item.title || item.movie_name || '').toLowerCase().includes(searchVal) || 
-                              (item.reviewer || item.reviewer_name || '').toLowerCase().includes(searchVal) ||
-                              (item.review || item.review_text || '').toLowerCase().includes(searchVal);
-        const matchesGenre = (genreVal === 'all') || (item.genre === genreVal);
-        return matchesSearch && matchesGenre;
-      });
+  // Filter Logic
+  let filtered = reviewsList.filter(item => {
+    const matchesSearch = (item.movie_name || '').toLowerCase().includes(searchVal) || 
+                          (item.reviewer_name || '').toLowerCase().includes(searchVal) ||
+                          (item.review_text || '').toLowerCase().includes(searchVal);
+    const matchesGenre = (genreVal === 'all') || (item.genre === genreVal);
+    return matchesSearch && matchesGenre;
+  });
 
-      // Sort Logic
-      filtered.sort((a, b) => {
-        if (sortVal === 'newest') return new Date(b.created_at || b.added_at) - new Date(a.created_at || a.added_at);
-        if (sortVal === 'rating-high') return b.rating - a.rating;
-        if (sortVal === 'rating-low') return a.rating - b.rating;
-        if (sortVal === 'title') return (a.title || a.movie_name || '').localeCompare(b.title || b.movie_name || '');
-        return 0;
-      });
+  // Sort Logic
+  filtered.sort((a, b) => {
+    if (sortVal === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    if (sortVal === 'rating-high') return b.rating - a.rating;
+    if (sortVal === 'rating-low') return a.rating - b.rating;
+    if (sortVal === 'title') return (a.movie_name || '').localeCompare(b.movie_name || '');
+    return 0;
+  });
 
-      // Empty Database State
-      if (filtered.length === 0) {
-        grid.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        paginationContainer.classList.add('hidden');
-        return;
-      } else {
-        emptyState.classList.add('hidden');
-      }
+  // Empty Database State
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    emptyState.classList.remove('hidden');
+    paginationContainer.classList.add('hidden');
+    return;
+  } else {
+    emptyState.classList.add('hidden');
+  }
 
-      // Pagination
-      const paginated = filtered.slice(0, currentPage * pageSize);
-      if (filtered.length > paginated.length) {
-        paginationContainer.classList.remove('hidden');
-        document.getElementById('showing-count').innerText = `${paginated.length} / ${filtered.length}`;
-      } else {
-        paginationContainer.classList.add('hidden');
-      }
+  // Pagination
+  const paginated = filtered.slice(0, currentPage * pageSize);
+  if (filtered.length > paginated.length) {
+    paginationContainer.classList.remove('hidden');
+    document.getElementById('showing-count').innerText = `${paginated.length} / ${filtered.length}`;
+  } else {
+    paginationContainer.classList.add('hidden');
+  }
 
-      // Render Cards
-      grid.innerHTML = paginated.map(item => {
-        const movieTitle = item.title || item.movie_name || 'Untitled';
-        const reviewer = item.reviewer || item.reviewer_name || 'Anonymous';
-        const reviewText = item.review || item.review_text || '';
-        const createdDate = (item.created_at || item.added_at || '').split('T')[0] || 'Recently';
-        const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
+  // Render Cards
+  grid.innerHTML = paginated.map(item => {
+    const movieTitle = item.movie_name || 'Untitled';
+    const reviewer = item.reviewer_name || 'Anonymous';
+    const reviewText = item.review_text || '';
+    const createdDate = (item.created_at || '').split('T')[0] || 'Recently';
+    const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
 
-        return `
-          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-blue-300 transition-all">
-            <div>
-              <div class="flex items-start justify-between gap-2 mb-2">
-                <h3 class="font-bold text-slate-800 text-base leading-snug">${escapeHtml(movieTitle)}</h3>
-                <span class="text-xs font-mono font-bold text-amber-500 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md whitespace-nowrap">
-                  ${stars}
-                </span>
-              </div>
-              <div class="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full mb-3">
-                ${escapeHtml(item.genre || 'General')}
-              </div>
-              <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                "${escapeHtml(reviewText)}"
-              </p>
-            </div>
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span>By <strong class="text-slate-700">${escapeHtml(reviewer)}</strong></span>
-              <span>${createdDate}</span>
-            </div>
+    return `
+      <div class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-blue-300 transition-all">
+        <div>
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-bold text-slate-800 text-base leading-snug">${escapeHtml(movieTitle)}</h3>
+            <span class="text-xs font-mono font-bold text-amber-500 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+              ${stars}
+            </span>
           </div>
-        `;
-      }).join('');
-    }
+          <div class="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full mb-3">
+            ${escapeHtml(item.genre || 'General')}
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed mb-4">
+            "${escapeHtml(reviewText)}"
+          </p>
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>By <strong class="text-slate-700">${escapeHtml(reviewer)}</strong></span>
+          <span>${createdDate}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
-    function handleFilterChange() {
-      currentPage = 1;
-      renderReviews();
-    }
+// Submit Review directly to Supabase
+async function submitReview(event) {
+  event.preventDefault();
 
-    function loadMoreReviews() {
-      currentPage++;
-      renderReviews();
-    }
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.innerText = 'Publishing...';
+  submitBtn.disabled = true;
 
-    // Submit Review directly to Supabase
-    async function submitReview(event) {
-      event.preventDefault();
+  const movieName = document.getElementById('movie_name').value.trim();
+  const genre = document.getElementById('genre').value;
+  const rating = parseInt(document.getElementById('rating').value);
+  const reviewerName = document.getElementById('reviewer_name').value.trim();
+  const reviewText = document.getElementById('review_text').value.trim();
 
-      const submitBtn = document.getElementById('submit-btn');
-      submitBtn.innerText = 'Publishing...';
-      submitBtn.disabled = true;
+  if (!movieName || !genre || !reviewerName || !reviewText) {
+    alert('Please fill out all fields.');
+    submitBtn.innerText = 'Publish Review';
+    submitBtn.disabled = false;
+    return;
+  }
 
-      const movieName = document.getElementById('movie_name').value.trim();
-      const genre = document.getElementById('genre').value;
-      const rating = parseInt(document.getElementById('rating').value);
-      const reviewerName = document.getElementById('reviewer_name').value.trim();
-      const reviewText = document.getElementById('review_text').value.trim();
-
-      if (!movieName || !genre || !reviewerName || !reviewText) {
-        alert('Please fill out all fields.');
-        submitBtn.innerText = 'Publish Review';
-        submitBtn.disabled = false;
-        return;
+  // Save to Supabase Table 'movies'
+  const { data, error } = await supabaseClient
+    .from('movies')
+    .insert([
+      { 
+        movie_name: movieName, 
+        genre: genre, 
+        rating: rating, 
+        reviewer_name: reviewerName, 
+        review_text: reviewText 
       }
+    ]);
 
-      // Save to Supabase Table 'movies'
-      const { data, error } = await supabaseClient
-        .from('movies')
-        .insert([
-          { 
-            title: movieName, 
-            genre: genre, 
-            rating: rating, 
-            reviewer: reviewerName, 
-            review: reviewText 
-          }
-        ]);
+  submitBtn.innerText = 'Publish Review';
+  submitBtn.disabled = false;
 
-      submitBtn.innerText = 'Publish Review';
-      submitBtn.disabled = false;
-
-      if (error) {
-        console.error('Error inserting review into Supabase:', error.message);
-        alert('Could not save review: ' + error.message);
-
-        // Fallback: If your table uses movie_name/reviewer_name column names instead:
-        const fallback = await supabaseClient
-          .from('movies')
-          .insert([
-            { 
-              movie_name: movieName, 
-              genre: genre, 
-              rating: rating, 
-              reviewer_name: reviewerName, 
-              review_text: reviewText 
-            }
-          ]);
-
-        if (!fallback.error) {
-          document.getElementById('review-form').reset();
-          updateStarDisplay(5);
-          document.getElementById('char-counter').innerText = '0';
-          switchView('looking');
-        }
-      } else {
-        document.getElementById('review-form').reset();
-        updateStarDisplay(5);
-        document.getElementById('char-counter').innerText = '0';
-        switchView('looking');
-      }
-    }
+  if (error) {
+    console.error('Error inserting review into Supabase:', error.message);
+    alert('Could not save review: ' + error.message);
+  } else {
+    document.getElementById('review-form').reset();
+    updateStarDisplay(5);
+    document.getElementById('char-counter').innerText = '0';
+    switchView('looking');
+  }
+}
 
     // Prevent HTML Injection
     function escapeHtml(str) {
