@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Watchlist Hub</title>
+
+  <!-- Favicon using SVG Emoji -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.5) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(224, 231, 255, 0.5) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #334155;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.08);
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+      color: #f59e0b;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-100 selection:text-blue-900">
+
+  <header class="w-full bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- App Logo & Title -->
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🍿</span>
+        <h1 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">Movie Watchlist Hub</h1>
+      </div>
+
+      <!-- Navigation & Homepage Link -->
+      <div class="flex items-center gap-2">
+        <!-- View Switcher Tabs -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <button id="nav-looking" onclick="switchView('looking')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-blue-600 shadow-sm">
+            🔍 Browse (<span id="review-count-badge">0</span>)
+          </button>
+          <button id="nav-adding" onclick="switchView('adding')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">
+            ✍️ Add Review
+          </button>
+        </div>
+
+        <!-- Back to Homepage Link Next to Review Controls -->
+        <a href="../index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-3 py-2 rounded-xl transition-all border border-slate-200 hover:border-blue-200 shadow-sm">
+          <span>←</span> Back to Homepage
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="w-full max-w-5xl mx-auto px-4 py-8 flex-grow">
+
+    <section id="view-looking" class="space-y-6">
+      
+      <!-- Controls Container (Search, Genre Filter, Sorting) -->
+      <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        
+        <!-- Search Input -->
+        <div class="relative flex-grow">
+          <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input 
+            type="text" 
+            id="search-input" 
+            oninput="handleFilterChange()"
+            placeholder="Search by movie title or reviewer..." 
+            class="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl pl-10 pr-4 py-2 text-sm text-slate-700 transition-all"
+          />
+        </div>
+
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+          <!-- Filter by Genre -->
+          <select id="genre-filter" onchange="handleFilterChange()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3 py-2 text-xs font-medium text-slate-700">
+            <option value="all">All Genres</option>
+            <option value="Animated/Anime">Animated/Anime</option>
+            <option value="Action & Adventure">Action & Adventure</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Documentaries">Documentaries</option>
+            <option value="Romance">Romance</option>
+            <option value="Drama">Drama</option>
+          </select>
+
+          <!-- Sort Selector -->
+          <select id="sort-select" onchange="handleFilterChange()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3 py-2 text-xs font-medium text-slate-700">
+            <option value="newest">Newest First</option>
+            <option value="rating-high">Highest Rated ★</option>
+            <option value="rating-low">Lowest Rated ★</option>
+            <option value="title">Title (A-Z)</option>
+          </select>
+
+          <!-- Testing Reset Button -->
+          <button onclick="clearAllForTesting()" class="text-xs text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-2 rounded-xl border border-rose-200 transition-colors whitespace-nowrap" title="Simulate empty database state">
+            🗑️ Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Reviews Grid -->
+      <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Dynamically rendered reviews -->
+      </div>
+
+      <!-- Awkward Case 1: Empty Database State -->
+      <div id="empty-state" class="hidden text-center py-20 bg-white/70 border border-dashed border-slate-300 rounded-3xl p-8">
+        <span class="text-5xl block mb-3">🎬</span>
+        <h3 class="text-lg font-bold text-slate-700">Be the first one to submit a review.</h3>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">No movie reviews have been logged yet. Share what you watched recently!</p>
+        <button onclick="switchView('adding')" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl transition-all shadow-md">
+          + Add First Review
+        </button>
+      </div>
+
+      <!-- Awkward Case 4: Pagination (300 rows view more) -->
+      <div id="pagination-container" class="text-center pt-4 hidden">
+        <button onclick="loadMoreReviews()" class="px-6 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all shadow-sm">
+          Load More Reviews ↓ (<span id="showing-count">0</span> showing)
+        </button>
+      </div>
+    </section>
+
+    <section id="view-adding" class="hidden max-w-xl mx-auto">
+      <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div class="mb-6 text-center">
+          <span class="text-4xl block mb-2">🎥</span>
+          <h2 class="text-xl font-extrabold text-slate-800">Watched a movie? What did you think?</h2>
+          <p class="text-xs text-slate-500 mt-1">Submit your rating and review to share with other movie watchers.</p>
+        </div>
+
+        <form id="review-form" onsubmit="submitReview(event)" class="space-y-5">
+          
+          <!-- Movie Title -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Movie Name *</label>
+            <input 
+              type="text" 
+              id="movie_name" 
+              required
+              placeholder="e.g. Spirited Away" 
+              class="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-800 transition-all"
+            />
+          </div>
+
+          <!-- Genre Selection (Pick from list rule) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Genre *</label>
+            <select 
+              id="genre" 
+              required
+              class="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-800 transition-all"
+            >
+              <option value="" disabled selected>Select a genre...</option>
+              <option value="Animated/Anime">Animated/Anime</option>
+              <option value="Action & Adventure">Action & Adventure</option>
+              <option value="Comedy">Comedy</option>
+              <option value="Documentaries">Documentaries</option>
+              <option value="Romance">Romance</option>
+              <option value="Drama">Drama</option>
+            </select>
+          </div>
+
+          <!-- Star Rating (1 to 5) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Rating (1 to 5 Stars) *</label>
+            <div class="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <input type="range" id="rating" min="1" max="5" value="5" oninput="updateStarDisplay(this.value)" class="w-full accent-amber-500 cursor-pointer">
+              <span id="star-display" class="text-base font-bold text-amber-500 whitespace-nowrap min-w-[70px] text-right">★★★★★ (5)</span>
+            </div>
+          </div>
+
+          <!-- Reviewer Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Your Name *</label>
+            <input 
+              type="text" 
+              id="reviewer_name" 
+              required
+              placeholder="e.g. Alex" 
+              class="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-800 transition-all"
+            />
+          </div>
+
+          <!-- Review Text (Awkward Case 3: 250 character limit) -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Review *</label>
+              <span class="text-[11px] text-slate-400"><span id="char-counter">0</span> / 250 max</span>
+            </div>
+            <textarea 
+              id="review_text" 
+              required
+              maxlength="250"
+              oninput="updateCharCounter(this)"
+              rows="3"
+              placeholder="What made this film worth watching (or avoiding)?" 
+              class="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-800 transition-all resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button type="button" onclick="switchView('looking')" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition-all">
+              Cancel
+            </button>
+            <button type="submit" class="px-6 py-2.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 transition-all">
+              Publish Review
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-slate-200 bg-white/50 backdrop-blur py-5 text-center text-xs text-slate-400">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>Movie Watchlist Hub • Build 1 (Memory Stack)</p>
+      <a href="../index.html" class="text-blue-500 hover:underline font-medium">← Back to Project Hub</a>
+    </div>
+  </footer>
+
+  <script>
+    // ====================================================
+    // MOCK DATASET (SWAPPABLE WITH SUPABASE LATER)
+    // ====================================================
+    const INITIAL_MOCK_REVIEWS = [
+      { id: 1, movie_name: "Spirited Away", genre: "Animated/Anime", rating: 5, reviewer_name: "Maya", review_text: "A breathtaking masterpiece of imagination and atmosphere. Studio Ghibli at its absolute finest.", added_at: "2026-08-28 14:20" },
+      { id: 2, movie_name: "The Dark Knight", genre: "Action & Adventure", rating: 5, reviewer_name: "Jordan", review_text: "Heath Ledger's performance is legendary. Peak cinema pacing from start to finish.", added_at: "2026-08-29 09:15" },
+      { id: 3, movie_name: "Superbad", genre: "Comedy", rating: 4, reviewer_name: "Chris", review_text: "Hilarious and surprisingly wholesome coming-of-age story. McLovin never gets old.", added_at: "2026-08-29 11:40" },
+      { id: 4, movie_name: "My Octopus Teacher", genre: "Documentaries", rating: 5, reviewer_name: "Sam", review_text: "Surprisingly emotional and visually stunning look into marine wildlife. Highly recommend!", added_at: "2026-08-30 16:05" },
+      { id: 5, movie_name: "La La Land", genre: "Romance", rating: 4, reviewer_name: "Emma", review_text: "Gorgeous colors and music, though the ending breaks your heart every single time.", added_at: "2026-08-30 18:30" },
+      { id: 6, movie_name: "Oppenheimer", genre: "Drama", rating: 5, reviewer_name: "Daniel", review_text: "Intense sound design and incredible acting. Keeps you hooked for 3 hours straight.", added_at: "2026-08-31 10:12" },
+      { id: 7, movie_name: "Your Name", genre: "Animated/Anime", rating: 5, reviewer_name: "Liam", review_text: "Stunning animation with a soundtrack that stays in your head for weeks.", added_at: "2026-08-31 14:50" },
+      { id: 8, movie_name: "Mad Max: Fury Road", genre: "Action & Adventure", rating: 5, reviewer_name: "Alex", review_text: "Non-stop physical stunts and practical effects. Pure adrenaline.", added_at: "2026-09-01 08:30" },
+      { id: 9, movie_name: "Knives Out", genre: "Comedy", rating: 4, reviewer_name: "Sophia", review_text: "Fun whodunit mystery with a fantastic ensemble cast. Great cozy watch.", added_at: "2026-09-01 12:10" },
+      { id: 10, movie_name: "Free Solo", genre: "Documentaries", rating: 5, reviewer_name: "David", review_text: "My palms were sweating the entire time. Unbelievable human accomplishment.", added_at: "2026-09-01 15:45" },
+      { id: 11, movie_name: "Pride & Prejudice", genre: "Romance", rating: 4, reviewer_name: "Olivia", review_text: "The 2005 film adaptation is unmatched. Beautiful cinematography.", added_at: "2026-09-01 19:20" },
+      { id: 12, movie_name: "Whiplash", genre: "Drama", rating: 5, reviewer_name: "Ethan", review_text: "Aggressive, thrilling, and relentless performance by J.K. Simmons.", added_at: "2026-09-02 09:00" },
+      { id: 13, movie_name: "Spider-Man: Into the Spider-Verse", genre: "Animated/Anime", rating: 5, reviewer_name: "Zoe", review_text: "Revolutionized modern animation style. Perfect soundtrack and story.", added_at: "2026-09-02 11:15" },
+      { id: 14, movie_name: "Inception", genre: "Action & Adventure", rating: 4, reviewer_name: "Lucas", review_text: "Mind-bending story structure. Still debating what that ending top spin means.", added_at: "2026-09-02 13:40" },
+      { id: 15, movie_name: "The Grand Budapest Hotel", genre: "Comedy", rating: 4, reviewer_name: "Chloe", review_text: "Wes Anderson's symmetry and color palette at its absolute peak.", added_at: "2026-09-02 16:00" },
+      { id: 16, movie_name: "13th", genre: "Documentaries", rating: 5, reviewer_name: "Marcus", review_text: "Crucial, eye-opening documentary that everyone should take time to watch.", added_at: "2026-09-02 18:25" },
+      { id: 17, movie_name: "Before Sunrise", genre: "Romance", rating: 5, reviewer_name: "Hannah", review_text: "Simple concept executed flawlessly through realistic conversation.", added_at: "2026-09-03 07:10" },
+      { id: 18, movie_name: "Parasite", genre: "Drama", rating: 5, reviewer_name: "Noah", review_text: "Flawless genre blending and social commentary. Deserves every award.", added_at: "2026-09-03 08:30" },
+      { id: 19, movie_name: "Princess Mononoke", genre: "Animated/Anime", rating: 5, reviewer_name: "Ava", review_text: "Epic scale fantasy with complex themes about nature and industrialization.", added_at: "2026-09-03 09:05" },
+      { id: 20, movie_name: "Everything Everywhere All At Once", genre: "Action & Adventure", rating: 5, reviewer_name: "Leo", review_text: "Wildly inventive, funny, and deeply emotional multiverse story.", added_at: "2026-09-03 09:30" }
+    ];
+
+    // App State Variables
+    let reviewsList = [...INITIAL_MOCK_REVIEWS];
+    let pageSize = 6;
+    let currentPage = 1;
+
+    // View Navigation Switcher
+    function switchView(viewName) {
+      const lookingView = document.getElementById('view-looking');
+      const addingView = document.getElementById('view-adding');
+      const navLooking = document.getElementById('nav-looking');
+      const navAdding = document.getElementById('nav-adding');
+
+      if (viewName === 'looking') {
+        lookingView.classList.remove('hidden');
+        addingView.classList.add('hidden');
+        navLooking.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-blue-600 shadow-sm";
+        navAdding.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+        renderReviews();
+      } else {
+        lookingView.classList.add('hidden');
+        addingView.classList.remove('hidden');
+        navAdding.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-white text-blue-600 shadow-sm";
+        navLooking.className = "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+      }
+    }
+
+    // Character Limit Counter
+    function updateCharCounter(textarea) {
+      document.getElementById('char-counter').innerText = textarea.value.length;
+    }
+
+    // Star Rating Display Helper
+    function updateStarDisplay(val) {
+      const stars = '★'.repeat(parseInt(val)) + '☆'.repeat(5 - parseInt(val));
+      document.getElementById('star-display').innerText = `${stars} (${val})`;
+    }
+
+    // Render Function
+    function renderReviews() {
+      const grid = document.getElementById('reviews-grid');
+      const emptyState = document.getElementById('empty-state');
+      const paginationContainer = document.getElementById('pagination-container');
+      const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+      const genreVal = document.getElementById('genre-filter').value;
+      const sortVal = document.getElementById('sort-select').value;
+
+      document.getElementById('review-count-badge').innerText = reviewsList.length;
+
+      // Filter Logic
+      let filtered = reviewsList.filter(item => {
+        const matchesSearch = item.movie_name.toLowerCase().includes(searchVal) || 
+                              item.reviewer_name.toLowerCase().includes(searchVal) ||
+                              item.review_text.toLowerCase().includes(searchVal);
+        const matchesGenre = (genreVal === 'all') || (item.genre === genreVal);
+        return matchesSearch && matchesGenre;
+      });
+
+      // Sort Logic
+      filtered.sort((a, b) => {
+        if (sortVal === 'newest') return new Date(b.added_at) - new Date(a.added_at);
+        if (sortVal === 'rating-high') return b.rating - a.rating;
+        if (sortVal === 'rating-low') return a.rating - b.rating;
+        if (sortVal === 'title') return a.movie_name.localeCompare(b.movie_name);
+        return 0;
+      });
+
+      // Awkward Case 1: Empty Database
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        paginationContainer.classList.add('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // Awkward Case 4: Pagination
+      const paginated = filtered.slice(0, currentPage * pageSize);
+      if (filtered.length > paginated.length) {
+        paginationContainer.classList.remove('hidden');
+        document.getElementById('showing-count').innerText = `${paginated.length} / ${filtered.length}`;
+      } else {
+        paginationContainer.classList.add('hidden');
+      }
+
+      // Render Cards
+      grid.innerHTML = paginated.map(item => {
+        const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+        return `
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-blue-300 transition-all">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <h3 class="font-bold text-slate-800 text-base leading-snug">${escapeHtml(item.movie_name)}</h3>
+                <span class="text-xs font-mono font-bold text-amber-500 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                  ${stars}
+                </span>
+              </div>
+              <div class="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full mb-3">
+                ${escapeHtml(item.genre)}
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                "${escapeHtml(item.review_text)}"
+              </p>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span>By <strong class="text-slate-700">${escapeHtml(item.reviewer_name)}</strong></span>
+              <span>${item.added_at.split(' ')[0]}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleFilterChange() {
+      currentPage = 1;
+      renderReviews();
+    }
+
+    function loadMoreReviews() {
+      currentPage++;
+      renderReviews();
+    }
+
+    // Submit Review (Adding View)
+    function submitReview(event) {
+      event.preventDefault();
+
+      const movieName = document.getElementById('movie_name').value.trim();
+      const genre = document.getElementById('genre').value;
+      const rating = parseInt(document.getElementById('rating').value);
+      const reviewerName = document.getElementById('reviewer_name').value.trim();
+      const reviewText = document.getElementById('review_text').value.trim();
+
+      // Awkward Case 2: Empty submit prevention
+      if (!movieName || !genre || !reviewerName || !reviewText) {
+        return;
+      }
+
+      const now = new Date();
+      const timestamp = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+
+      const newReview = {
+        id: Date.now(),
+        movie_name: movieName,
+        genre: genre,
+        rating: rating,
+        reviewer_name: reviewerName,
+        review_text: reviewText,
+        added_at: timestamp
+      };
+
+      reviewsList.unshift(newReview);
+      document.getElementById('review-form').reset();
+      updateStarDisplay(5);
+      document.getElementById('char-counter').innerText = '0';
+      
+      switchView('looking');
+    }
+
+    // Clear function for testing empty state
+    function clearAllForTesting() {
+      if (reviewsList.length === 0) {
+        reviewsList = [...INITIAL_MOCK_REVIEWS];
+      } else {
+        reviewsList = [];
+      }
+      currentPage = 1;
+      renderReviews();
+    }
+
+    // Helper: Prevent HTML Injection
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Initial Load
+    window.onload = function() {
+      renderReviews();
+    };
+  </script>
+</body>
+</html>
