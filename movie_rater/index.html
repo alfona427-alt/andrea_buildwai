@@ -329,59 +329,121 @@
       const grid = document.getElementById('reviews-grid');
       const emptyState = document.getElementById('empty-state');
       const paginationContainer = document.getElementById('pagination-container');
-      const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
-      const genreVal = document.getElementById('genre-filter').value;
-      const sortVal = document.getElementById('sort-select').value;
+      const searchInput = document.getElementById('search-input');
+      const genreFilter = document.getElementById('genre-filter');
+      const sortSelect = document.getElementById('sort-select');
 
-      document.getElementById('review-count-badge').innerText = reviewsList.length;
+      if (!grid || !emptyState || !paginationContainer || !searchInput || !genreFilter || !sortSelect) {
+        console.error('Movie Watchlist: a required filter/render element is missing.');
+        return;
+      }
 
-      // Filter Logic
-      let filtered = reviewsList.filter(item => {
-        const matchesSearch = (item.movie_name || '').toLowerCase().includes(searchVal) || 
-                              (item.reviewer_name || '').toLowerCase().includes(searchVal) ||
-                              (item.review_text || '').toLowerCase().includes(searchVal);
-        
-        const matchesGenre = (genreVal === 'all') || 
-                             ((item.genre || '').trim().toLowerCase() === genreVal.trim().toLowerCase());
+      const searchVal = String(searchInput.value || '').toLowerCase().trim();
+      const genreVal = String(genreFilter.value || 'all').trim().toLowerCase();
+      const sortVal = String(sortSelect.value || 'newest');
+
+      // Always work with an array, even if Supabase returns no rows.
+      const sourceReviews = Array.isArray(reviewsList) ? reviewsList : [];
+
+      document.getElementById('review-count-badge').innerText = sourceReviews.length;
+
+      // Filter + search
+      let filtered = sourceReviews.filter(item => {
+        item = item || {};
+
+        const movieName = String(item.movie_name || '');
+        const reviewerName = String(item.reviewer_name || '');
+        const reviewText = String(item.review_text || '');
+        const itemGenre = String(item.genre || '').trim().toLowerCase();
+
+        const matchesSearch =
+          !searchVal ||
+          movieName.toLowerCase().includes(searchVal) ||
+          reviewerName.toLowerCase().includes(searchVal) ||
+          reviewText.toLowerCase().includes(searchVal);
+
+        const matchesGenre =
+          genreVal === 'all' || itemGenre === genreVal;
 
         return matchesSearch && matchesGenre;
       });
 
-      // Sort Logic
+      // Sort the filtered results.
       filtered.sort((a, b) => {
-        if (sortVal === 'newest') return new Date(b.created_at) - new Date(a.created_at);
-        if (sortVal === 'rating-high') return b.rating - a.rating;
-        if (sortVal === 'rating-low') return a.rating - b.rating;
-        if (sortVal === 'title') return (a.movie_name || '').localeCompare(b.movie_name || '');
-        return 0;
+        a = a || {};
+        b = b || {};
+
+        if (sortVal === 'rating-high' || sortVal === 'rating-low') {
+          const ratingA = Number(a.rating) || 0;
+          const ratingB = Number(b.rating) || 0;
+          return sortVal === 'rating-high'
+            ? ratingB - ratingA
+            : ratingA - ratingB;
+        }
+
+        if (sortVal === 'title') {
+          return String(a.movie_name || '').localeCompare(
+            String(b.movie_name || ''),
+            undefined,
+            { sensitivity: 'base' }
+          );
+        }
+
+        // Newest first. Missing/invalid dates are treated as oldest.
+        const dateA = Date.parse(a.created_at || '');
+        const dateB = Date.parse(b.created_at || '');
+        const timeA = Number.isNaN(dateA) ? 0 : dateA;
+        const timeB = Number.isNaN(dateB) ? 0 : dateB;
+        return timeB - timeA;
       });
 
-      // Empty Database State
+      // No results after filtering/searching.
       if (filtered.length === 0) {
         grid.innerHTML = '';
         emptyState.classList.remove('hidden');
         paginationContainer.classList.add('hidden');
+
+        const emptyTitle = emptyState.querySelector('h3');
+        const emptyText = emptyState.querySelector('p');
+
+        if (sourceReviews.length === 0) {
+          if (emptyTitle) emptyTitle.innerText = 'Be the first one to submit a review.';
+          if (emptyText) emptyText.innerText =
+            'No movie reviews have been logged yet. Share what you watched recently!';
+        } else {
+          if (emptyTitle) emptyTitle.innerText = 'No reviews match your search.';
+          if (emptyText) emptyText.innerText =
+            'Try a different movie, reviewer, genre, or sort option.';
+        }
         return;
-      } else {
-        emptyState.classList.add('hidden');
       }
 
+      emptyState.classList.add('hidden');
+
       // Pagination
-      const paginated = filtered.slice(0, currentPage * pageSize);
+      const visibleCount = Math.max(1, currentPage) * pageSize;
+      const paginated = filtered.slice(0, visibleCount);
+
       if (filtered.length > paginated.length) {
         paginationContainer.classList.remove('hidden');
-        document.getElementById('showing-count').innerText = `${paginated.length} / ${filtered.length}`;
+        document.getElementById('showing-count').innerText =
+          `${paginated.length} / ${filtered.length}`;
       } else {
         paginationContainer.classList.add('hidden');
       }
 
-      // Render Cards
+      // Render cards
       grid.innerHTML = paginated.map(item => {
-        const movieTitle = item.movie_name || 'Untitled';
-        const reviewer = item.reviewer_name || 'Anonymous';
-        const reviewText = item.review_text || '';
-        const createdDate = (item.created_at || '').split('T')[0] || 'Recently';
-        const stars = '★'.repeat(item.rating || 5) + '☆'.repeat(5 - (item.rating || 5));
+        const movieTitle = String(item.movie_name || 'Untitled');
+        const reviewer = String(item.reviewer_name || 'Anonymous');
+        const reviewText = String(item.review_text || '');
+        const createdDate = item.created_at
+          ? new Date(item.created_at).toLocaleDateString()
+          : 'Recently';
+
+        const rating = Math.min(5, Math.max(1, Number(item.rating) || 5));
+        const stars =
+          '★'.repeat(rating) + '☆'.repeat(5 - rating);
 
         return `
           <div class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-blue-300 transition-all">
@@ -401,7 +463,7 @@
             </div>
             <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
               <span>By <strong class="text-slate-700">${escapeHtml(reviewer)}</strong></span>
-              <span>${createdDate}</span>
+              <span>${escapeHtml(createdDate)}</span>
             </div>
           </div>
         `;
@@ -462,9 +524,26 @@
     }
 
     // Initial Load
-    window.onload = function() {
+    window.addEventListener('DOMContentLoaded', function() {
+      // Attach the controls directly so search/filter/sort always trigger a redraw.
+      const searchInput = document.getElementById('search-input');
+      const genreFilter = document.getElementById('genre-filter');
+      const sortSelect = document.getElementById('sort-select');
+
+      if (searchInput) {
+        searchInput.addEventListener('input', handleFilterChange);
+      }
+
+      if (genreFilter) {
+        genreFilter.addEventListener('change', handleFilterChange);
+      }
+
+      if (sortSelect) {
+        sortSelect.addEventListener('change', handleFilterChange);
+      }
+
       fetchReviewsFromSupabase();
-    };
+    });
   </script>
 </body>
 </html>
