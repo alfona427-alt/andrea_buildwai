@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UNICEF ASD Chapter Hub & Portal</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            unicef: {
+              blue: '#00ADEF',
+              hover: '#008CC3',
+              dark: '#1C2B36',
+              light: '#E6F7FF',
+              accent: '#FFC20E'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F4F8FA;
+      color: #1C2B36;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #00ADEF;
+      border-radius: 4px;
+    }
+    .toast-animate {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="bg-[#1C2B36] text-white sticky top-0 z-40 shadow-md border-b-4 border-[#00ADEF]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateToHome()">
+        <div class="bg-[#00ADEF] text-white p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10 shadow-sm">
+          <i class="fa-solid fa-hands-holding-child"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-none text-white">
+            UNICEF <span class="text-[#00ADEF]">ASD Chapter</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-medium hidden sm:block">American School of Doha • For Every Child</p>
+        </div>
+      </div>
+
+      <!-- Header User Controls & Quick Role Switcher -->
+      <div id="nav-user-area" class="flex items-center space-x-3">
+        <!-- Logged Out / Guest Access Button -->
+        <div id="nav-logged-out" class="flex items-center space-x-2">
+          <button onclick="toggleAuthTab('signin'); showAuthPortal();" class="text-sm font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-md transition">
+            Sign In
+          </button>
+          <button onclick="toggleAuthTab('signup'); showAuthPortal();" class="text-sm font-semibold bg-[#00ADEF] hover:bg-[#008CC3] text-white px-4 py-1.5 rounded-lg shadow-sm transition">
+            Join Chapter
+          </button>
+        </div>
+
+        <!-- Logged In / Guest Active View -->
+        <div id="nav-logged-in" class="hidden flex items-center space-x-3">
+          <!-- Role Badge -->
+          <span id="nav-role-badge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-[#008CC3] border border-blue-200 uppercase tracking-wider">
+            Member
+          </span>
+
+          <!-- User Info Pill -->
+          <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            <i class="fa-solid fa-circle-user text-[#00ADEF] text-lg"></i>
+            <span id="nav-username" class="text-sm font-medium text-slate-100">@username</span>
+          </div>
+
+          <!-- Logout / Exit Button -->
+          <button onclick="handleSignOut()" class="text-slate-300 hover:text-red-400 p-2 rounded-lg hover:bg-slate-800 transition" title="Sign Out / Exit Guest Mode">
+            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Secondary Navigation Bar (Visible when signed in) -->
+  <nav id="app-subnav" class="hidden bg-white border-b border-slate-200 shadow-sm sticky top-16 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 overflow-x-auto py-2 custom-scrollbar">
+      <button onclick="switchTab('feed')" id="tab-btn-feed" class="nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-[#00ADEF] border-b-2 border-[#00ADEF] whitespace-nowrap">
+        <i class="fa-solid fa-lightbulb"></i>
+        <span>Proposals & Ideas</span>
+      </button>
+      <button onclick="switchTab('events')" id="tab-btn-events" class="nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-[#00ADEF] border-b-2 border-transparent whitespace-nowrap">
+        <i class="fa-solid fa-calendar-days"></i>
+        <span>Event Calendar</span>
+      </button>
+      <button onclick="switchTab('spotlight')" id="tab-btn-spotlight" class="nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-[#00ADEF] border-b-2 border-transparent whitespace-nowrap">
+        <i class="fa-solid fa-earth-americas"></i>
+        <span>Monthly Cause Spotlight</span>
+      </button>
+      <button onclick="switchTab('exec')" id="tab-btn-exec" class="nav-tab-btn hidden flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-amber-600 hover:text-amber-700 border-b-2 border-transparent whitespace-nowrap">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Exec Review Queue</span>
+        <span id="pending-badge-count" class="bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">0</span>
+      </button>
+      <button onclick="switchTab('account')" id="tab-btn-account" class="nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-[#00ADEF] border-b-2 border-transparent whitespace-nowrap">
+        <i class="fa-solid fa-user-gear"></i>
+        <span>Account & Security</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- VIEW 1: AUTHENTICATION PORTAL (Shown when logged out) -->
+    <div id="portal-view" class="max-w-4xl mx-auto my-4 sm:my-8">
+      <div class="grid grid-cols-1 md:grid-cols-12 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        
+        <!-- Left Hero Banner Panel -->
+        <div class="md:col-span-5 bg-gradient-to-br from-[#1C2B36] to-slate-900 text-white p-8 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+            <i class="fa-solid fa-hands-holding-child text-9xl"></i>
+          </div>
+          <div>
+            <div class="inline-block px-3 py-1 bg-[#00ADEF]/20 text-[#00ADEF] border border-[#00ADEF]/30 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
+              ASD Chapter Portal
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-3">
+              Advocating for Every Child's Future
+            </h2>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+              Connect with fellow American School of Doha student advocates, submit fundraising proposals, manage committee initiatives, and organize impactful events.
+            </p>
+          </div>
+
+          <div class="space-y-3 border-t border-slate-700/60 pt-6">
+            <div class="flex items-center space-x-3 text-xs text-slate-300">
+              <i class="fa-solid fa-check-circle text-[#00ADEF]"></i>
+              <span>Exec-Reviewed Proposal Workflow</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-300">
+              <i class="fa-solid fa-check-circle text-[#00ADEF]"></i>
+              <span>Direct Supabase Identity Integration</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-300">
+              <i class="fa-solid fa-check-circle text-[#00ADEF]"></i>
+              <span>Events, Fundraising, Media & Awareness</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sign In / Up Form Panel -->
+        <div class="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
+          
+          <!-- Portal Tabs Header -->
+          <div class="flex border-b border-slate-200 mb-6">
+            <button onclick="toggleAuthTab('signin')" id="auth-tab-signin" class="pb-3 px-4 font-bold text-sm text-[#00ADEF] border-b-2 border-[#00ADEF] transition">
+              Sign In
+            </button>
+            <button onclick="toggleAuthTab('signup')" id="auth-tab-signup" class="pb-3 px-4 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition">
+              Register Account
+            </button>
+          </div>
+
+          <!-- Auth Form Body -->
+          <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+            
+            <!-- Email Input -->
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <i class="fa-solid fa-envelope"></i>
+                </span>
+                <input type="email" id="auth-email" required placeholder="student@asd.edu.qa" 
+                       class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF] focus:border-transparent transition" />
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Password</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+                <input type="password" id="auth-password" required placeholder="••••••••" 
+                       class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF] focus:border-transparent transition" />
+              </div>
+              <p id="password-policy-hint" class="hidden text-xs text-slate-400 mt-1">
+                Must be at least 8 characters long with letters and numbers.
+              </p>
+            </div>
+
+            <!-- Registration Additional Fields (Role & Username) -->
+            <div id="signup-fields-group" class="hidden space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Unique Username</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <i class="fa-solid fa-at"></i>
+                  </span>
+                  <input type="text" id="auth-username" placeholder="e.g. sarah_v" 
+                         class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF] focus:border-transparent transition" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Account Role Level</label>
+                <select id="auth-role" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none">
+                  <option value="member">General Club Member</option>
+                  <option value="exec">Executive Board Member</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center space-x-2">
+              <span>Sign In to Chapter</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+          </form>
+
+          <!-- Divider for Guest Access -->
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+            <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-semibold">Or Browse Without Sign In</span></div>
+          </div>
+
+          <!-- Guest Access Option -->
+        <button onclick="continueAsGuest()" class="w-full p-3 border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-eye text-slate-500"></i>
+          <span>Continue as Guest (Read-Only Access)</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+  <!-- WEBSITE DASHBOARD VIEW (Shown upon sign-in / guest access) -->
+  <div id="website-view" class="hidden space-y-6 max-w-7xl w-full mx-auto">
+    <!-- Quick Chapter Metrics Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div class="p-3 bg-blue-50 text-[#00ADEF] rounded-xl text-xl">
+          <i class="fa-solid fa-lightbulb"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Approved Ideas</p>
+          <h4 id="stat-approved-count" class="text-xl font-bold text-slate-800">0</h4>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Pending Review</p>
+          <h4 id="stat-pending-count" class="text-xl font-bold text-slate-800">0</h4>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Upcoming Events</p>
+          <h4 id="stat-events-count" class="text-xl font-bold text-slate-800">0</h4>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl text-xl">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Active Members</p>
+          <h4 class="text-xl font-bold text-slate-800">42</h4>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: PROPOSALS & IDEAS FEED -->
+    <section id="sec-feed" class="space-y-6">
+      
+      <!-- Committee Filter & Controls -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">Committees:</span>
+          <button onclick="filterCommittees('all')" id="btn-filter-all" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00ADEF] text-white">
+            All Committees
+          </button>
+          <button onclick="filterCommittees('events')" id="btn-filter-events" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+            🎨 Events
+          </button>
+          <button onclick="filterCommittees('fundraising')" id="btn-filter-fundraising" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+            💰 Fundraising
+          </button>
+          <button onclick="filterCommittees('media')" id="btn-filter-media" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+            📱 Media
+          </button>
+          <button onclick="filterCommittees('awareness')" id="btn-filter-awareness" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+            💡 Awareness
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <input type="text" id="feed-search-input" onkeyup="searchProposals()" placeholder="Search proposals..." 
+                 class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+          <button onclick="openProposalModal()" class="px-4 py-1.5 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-1 shrink-0">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>New Proposal</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Proposals List Feed -->
+      <div id="ideas-feed-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamically Populated -->
+      </div>
+    </section>
+
+    <!-- TAB 2: EVENT CALENDAR -->
+    <section id="sec-events" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800">ASD Chapter Event Calendar</h3>
+            <p class="text-xs text-slate-500">Upcoming global advocacy drives, school bake sales, and committee meetings.</p>
+          </div>
+          <button id="add-event-btn" onclick="openEventModal()" class="hidden px-4 py-2 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-2">
+            <i class="fa-solid fa-plus"></i>
+            <span>Schedule New Event (Exec)</span>
+          </button>
+        </div>
+
+        <!-- Events Grid -->
+        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: MONTHLY SPOTLIGHT CAUSE -->
+    <section id="sec-spotlight" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="relative h-64 sm:h-80 bg-slate-900">
+          <img id="spotlight-image" src="https://images.unsplash.com/photo-1541976844346-f18aeac57b06?auto=format&fit=crop&w=1200&q=80" 
+               alt="Monthly Cause Banner" class="w-full h-full object-cover opacity-60" />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent p-6 sm:p-10 flex flex-col justify-end">
+            <span class="inline-block px-3 py-1 bg-[#00ADEF] text-white rounded-full text-xs font-bold uppercase tracking-wider mb-2 w-max">
+              Current Cause Spotlight
+            </span>
+            <h3 id="spotlight-title" class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+              Clean Water & Sanitation Initiative
+            </h3>
+            <p class="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">
+              Highlighting UNICEF's global mission to provide clean drinking water, hygiene education, and sustainable infrastructure to vulnerable communities.
+            </p>
+          </div>
+        </div>
+
+        <div class="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 space-y-4">
+            <h4 class="text-lg font-bold text-slate-800 border-b pb-2">Campaign Overview & Objectives</h4>
+            <p id="spotlight-description" class="text-sm text-slate-600 leading-relaxed">
+              This month, the ASD Chapter is raising awareness and funds for solar-powered water pumps in crisis areas. Over 1,000 children die daily from diseases caused by unsafe water. ASD students can contribute by leading educational drives or submitting fundraising event proposals.
+            </p>
+            
+            <!-- Progress Bar -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div class="flex justify-between text-xs font-bold text-slate-700">
+                <span>ASD Fundraising Goal: $2,500</span>
+                <span class="text-[#00ADEF]">68% Reached</span>
+              </div>
+              <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                <div class="bg-[#00ADEF] h-full rounded-full" style="width: 68%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side Action Box -->
+          <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl flex flex-col justify-between space-y-4">
+            <div>
+              <h5 class="font-bold text-slate-800 text-sm mb-1">Get Involved</h5>
+              <p class="text-xs text-slate-600">Submit a proposal to your committee or volunteer for the upcoming awareness drive.</p>
+            </div>
+            <button onclick="openProposalModal()" class="w-full py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
+              Propose Cause Idea
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: EXECUTIVE APPROVAL QUEUE (Execs Only) -->
+    <section id="sec-exec" class="hidden space-y-6">
+      <div class="bg-amber-50/60 border border-amber-200 p-6 rounded-2xl shadow-sm">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="p-2 bg-amber-500 text-white rounded-lg">
+            <i class="fa-solid fa-shield-halved text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-slate-900">Executive Moderation Queue</h3>
+            <p class="text-xs text-slate-600">Review member proposals before they appear on the public chapter feed.</p>
+          </div>
+        </div>
+
+        <!-- Pending Proposals Table/List -->
+        <div id="pending-proposals-list" class="space-y-4">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: ACCOUNT & SECURITY SETTINGS -->
+    <section id="sec-account" class="hidden space-y-6 max-w-2xl mx-auto">
+      <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div class="border-b border-slate-200 pb-4">
+          <h3 class="text-xl font-bold text-slate-800">Account Overview & Security</h3>
+          <p class="text-xs text-slate-500">Manage your password and profile metadata.</p>
+        </div>
+
+        <!-- Profile Info Box -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-500 font-semibold">Logged-in User:</span>
+            <span id="acc-username-display" class="font-bold text-slate-800">@username</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-500 font-semibold">User Role:</span>
+            <span id="acc-role-display" class="font-bold text-[#008CC3] uppercase">MEMBER</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-500 font-semibold">Auth Provider:</span>
+            <span id="acc-provider-display" class="font-bold text-slate-600">Supabase Auth</span>
+          </div>
+        </div>
+
+        <!-- Self-Service Change Password Form -->
+        <form onsubmit="handleChangePassword(event)" class="space-y-4 pt-2">
+          <h4 class="text-sm font-bold text-slate-800">Update Password</h4>
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">New Password</label>
+            <input type="password" id="new-password" required placeholder="Min. 8 characters" 
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password</label>
+            <input type="password" id="confirm-password" required placeholder="Re-enter password" 
+                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+          </div>
+
+          <button type="submit" class="px-5 py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
+            Change Password
+          </button>
+        </form>
+      </div>
+    </section>
+
+  </div>
+  </main>
+
+  <!-- PROPOSAL SUBMISSION MODAL -->
+  <div id="proposal-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#1C2B36] text-white p-5 flex justify-between items-center border-b-4 border-[#00ADEF]">
+        <h3 class="font-bold text-base flex items-center space-x-2">
+          <i class="fa-solid fa-lightbulb text-[#00ADEF]"></i>
+          <span>Submit Chapter Proposal</span>
+        </h3>
+        <button onclick="closeProposalModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleProposalSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Proposal Title</label>
+          <input type="text" id="prop-title" required placeholder="e.g. Campus Bake Sale for Clean Water" 
+                 class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Target Committee</label>
+          <select id="prop-committee" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none">
+            <option value="events">🎨 Events</option>
+            <option value="fundraising">💰 Fundraising</option>
+            <option value="media">📱 Media</option>
+            <option value="awareness">💡 Awareness</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Detailed Description</label>
+          <textarea id="prop-description" required rows="4" placeholder="Explain the objective, required logistics, and expected impact..." 
+                    class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none"></textarea>
+        </div>
+
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start space-x-2">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+          <span>Note: Submissions require review by Sarah or an Executive Board member before appearing in the public feed.</span>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeProposalModal()" class="px-4 py-2 border border-slate-300 text-slate-600 font-bold text-xs rounded-lg hover:bg-slate-100">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg shadow-sm">
+            Submit for Review
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EVENT CREATION MODAL (EXEC ONLY) -->
+  <div id="event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#1C2B36] text-white p-5 flex justify-between items-center border-b-4 border-[#00ADEF]">
+        <h3 class="font-bold text-base flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-plus text-[#00ADEF]"></i>
+          <span>Schedule ASD Chapter Event</span>
+        </h3>
+        <button onclick="closeEventModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleEventSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Event Name</label>
+          <input type="text" id="evt-title" required placeholder="e.g. World Children's Day Assembly" 
+                 class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Date</label>
+            <input type="date" id="evt-date" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Location</label>
+            <input type="text" id="evt-location" required placeholder="ASD Auditorium / Room 204" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Committee</label>
+          <select id="evt-committee" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none">
+            <option value="events">🎨 Events</option>
+            <option value="fundraising">💰 Fundraising</option>
+            <option value="media">📱 Media</option>
+            <option value="awareness">💡 Awareness</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Event Summary</label>
+          <textarea id="evt-description" required rows="3" placeholder="Overview of goals and attendance expectations..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#00ADEF] focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeEventModal()" class="px-4 py-2 border border-slate-300 text-slate-600 font-bold text-xs rounded-lg hover:bg-slate-100">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg shadow-sm">
+            Publish Event
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-[#1C2B36] text-slate-400 text-xs py-6 border-t border-slate-800 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+      <p class="font-semibold text-slate-300">UNICEF American School of Doha (ASD) Student Chapter</p>
+      <p>Powered by Supabase Auth & Executive Review Engine • For Every Child, Every Right.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ----------------------------------------------------
+    // SUPABASE CONFIGURATION & CLIENT INITIALIZATION
+    // ----------------------------------------------------
+    const SUPABASE_URL = "https://ygipfasaddgitqnfzcjx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_K_bkPgrAcNBNcOjh9NSrpA_YgNIuuFT";
+    
+    let supabaseClient = null;
+    try {
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (err) {
+      console.warn("Supabase init fallback to client mode:", err);
+    }
+    // State Variables
+    let currentUser = null;
+    let currentProfile = null; // { id, username, role: 'exec' | 'member' | 'guest' }
+    let authTabMode = 'signin';
+    let activeCategoryFilter = 'all';
+
+    // Mock proposals initial store
+    let mockIdeas = [
+      {
+        id: '1',
+        title: 'UNICEF Blue Shirt Spirit Day & Donut Sale',
+        description: 'Organize a school-wide blue shirt dress up day where students contribute 10 QAR. Partner with local bakery for donut sales during lunch break.',
+        committee: 'fundraising',
+        status: 'approved',
+        username: 'sarah_exec',
+        created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+        upvotes: 14,
+        file: { name: 'spirit_day_proposal.pdf', url: '#' }
+      },
+      {
+        id: '2',
+        title: 'Social Media Campaign: Youth Education Rights',
+        description: 'Design infographic carousels for Instagram focusing on gender parity in primary education across developing nations.',
+        committee: 'media',
+        status: 'approved',
+        username: 'alex_member',
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+        upvotes: 9,
+        file: null
+      }
+    ];
+
+    let mockEvents = [
+      {
+        id: 'e1',
+        title: 'ASD UNICEF Chapter Launch & Orientation',
+        event_date: '2026-10-15',
+        location: 'ASD High School Auditorium',
+        committee: 'events',
+        description: 'Annual member welcome session, exec intro, and planning for upcoming global cause drives.'
+      },
+      {
+        id: 'e2',
+        title: 'Clean Water Initiative Bake Sale',
+        event_date: '2026-10-22',
+        location: 'Cafeteria Courtyard',
+        committee: 'fundraising',
+        description: 'Raising funds directly for UNICEF water purification tablet distribution.'
+      }
+    ];
+
+    // ----------------------------------------------------
+    // APPLICATION LIFECYCLE & AUTHENTICATION
+    // ----------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      initAppAuth();
+      renderFeed();
+      renderEvents();
+      renderPendingQueue();
+    });
+
+    async function initAppAuth() {
+      if (supabaseClient) {
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session?.user) {
+            setupUserSession(session.user, 'member');
+            return;
+          }
+        } catch (e) {
+          console.log("Supabase session check fallback");
+        }
+      }
+      
+      // Default: Logged Out (Show Portal)
+      showLoggedOutUI();
+    }
+
+    function showLoggedOutUI() {
+      currentUser = null;
+      currentProfile = null;
+      document.getElementById('portal-view').classList.remove('hidden');
+      const webView = document.getElementById('website-view');
+      if (webView) webView.classList.add('hidden');
+      document.getElementById('app-subnav').classList.add('hidden');
+      document.getElementById('nav-logged-out').classList.remove('hidden');
+      document.getElementById('nav-logged-in').classList.add('hidden');
+    }
+
+    async function handleSignOut() {
+      if (supabaseClient) {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch (e) {
+          console.log("Signout error:", e);
+        }
+      }
+      showLoggedOutUI();
+      showToast("You have been signed out.", "info");
+    }
+
+    function navigateToHome() {
+      if (currentProfile) {
+        switchTab('feed');
+      } else {
+        showLoggedOutUI();
+      }
+    }
+
+    function switchTab(tabName) {
+      const tabs = ['feed', 'events', 'spotlight', 'exec', 'account'];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`sec-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (sec) {
+          if (t === tabName) {
+            sec.classList.remove('hidden');
+          } else {
+            sec.classList.add('hidden');
+          }
+        }
+        if (btn) {
+          if (t === tabName) {
+            btn.className = "nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-[#00ADEF] border-b-2 border-[#00ADEF] whitespace-nowrap";
+          } else {
+            btn.className = "nav-tab-btn flex items-center space-x-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-[#00ADEF] border-b-2 border-transparent whitespace-nowrap";
+          }
+        }
+      });
+    }
+
+    function filterCommittees(category) {
+      activeCategoryFilter = category;
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      filterBtns.forEach(btn => {
+        btn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200";
+      });
+      const activeBtn = document.getElementById(`btn-filter-${category}`);
+      if (activeBtn) {
+        activeBtn.className = "filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00ADEF] text-white";
+      }
+      renderFeed();
+    }
+
+    function searchProposals() {
+      const query = (document.getElementById('feed-search-input')?.value || '').toLowerCase();
+      const container = document.getElementById('ideas-feed-container');
+      if (!container) return;
+
+      const cards = container.children;
+      Array.from(cards).forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (text.includes(query)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    function toggleAuthTab(tab) {
+      authTabMode = tab;
+      const signinBtn = document.getElementById('auth-tab-signin');
+      const signupBtn = document.getElementById('auth-tab-signup');
+      const signupGroup = document.getElementById('signup-fields-group');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const policyHint = document.getElementById('password-policy-hint');
+
+      if (tab === 'signin') {
+        signinBtn.className = "pb-3 px-4 font-bold text-sm text-[#00ADEF] border-b-2 border-[#00ADEF] transition";
+        signupBtn.className = "pb-3 px-4 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition";
+        signupGroup.classList.add('hidden');
+        policyHint.classList.add('hidden');
+        submitBtn.innerHTML = `<span>Sign In to Chapter</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+      } else {
+        signupBtn.className = "pb-3 px-4 font-bold text-sm text-[#00ADEF] border-b-2 border-[#00ADEF] transition";
+        signinBtn.className = "pb-3 px-4 font-bold text-sm text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition";
+        signupGroup.classList.remove('hidden');
+        policyHint.classList.remove('hidden');
+        submitBtn.innerHTML = `<span>Create Chapter Account</span> <i class="fa-solid fa-user-plus text-xs"></i>`;
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value.trim();
+      const username = document.getElementById('auth-username').value.trim();
+      const selectedRole = document.getElementById('auth-role').value;
+
+      if (!email || !password) {
+        showToast("Please enter an email address and password.", "error");
+        return;
+      }
+
+      if (password.length < 8) {
+        showToast("Password must be at least 8 characters long.", "error");
+        return;
+      }
+
+      if (authTabMode === 'signup') {
+        if (!username) {
+          showToast("Please choose a unique @username.", "error");
+          return;
+        }
+
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (!error && data.user) {
+              await supabaseClient.from('profiles').insert([
+                { id: data.user.id, username, role: selectedRole, auth_provider: 'email' }
+              ]);
+              setupUserSession(data.user, selectedRole, username);
+              showToast("Account registered successfully!", "success");
+              return;
+            }
+          } catch (err) {
+            console.log("Supabase signup fallback");
+          }
+        }
+
+        setupUserSession({ id: 'user_' + Date.now(), email }, selectedRole, username);
+        showToast(`Welcome @${username}! Account registered as ${selectedRole.toUpperCase()}.`, "success");
+
+      } else {
+        if (supabaseClient) {
+          try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (!error && data.user) {
+              const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', data.user.id).single();
+              const role = profile?.role || 'member';
+              const userHandle = profile?.username || email.split('@')[0];
+              setupUserSession(data.user, role, userHandle);
+              showToast("Signed in successfully!", "success");
+              return;
+            }
+          } catch (err) {
+            console.log("Supabase signin fallback");
+          }
+        }
+
+        const inferredRole = email.includes('exec') ? 'exec' : 'member';
+        const inferredUsername = email.split('@')[0];
+        setupUserSession({ id: 'user_1', email }, inferredRole, inferredUsername);
+        showToast(`Signed in as @${inferredUsername} (${inferredRole.toUpperCase()})`, "success");
+      }
+    }
+
+    function continueAsGuest() {
+      setupUserSession({ id: 'guest_visitor' }, 'guest', 'Guest');
+      showToast("Browsing UNICEF ASD Chapter Hub as Guest.", "info");
+    }
+
+    function showAuthPortal() {
+      document.getElementById('portal-view').classList.remove('hidden');
+      const webView = document.getElementById('website-view');
+      if (webView) webView.classList.add('hidden');
+      document.getElementById('app-subnav').classList.add('hidden');
+    }
+
+    function setupUserSession(user, role = 'member', username = '') {
+      currentUser = user;
+      currentProfile = {
+        id: user?.id || 'user_id',
+        username: username || (role === 'guest' ? 'Guest' : (user?.email ? user.email.split('@')[0] : 'student')),
+        role: role
+      };
+
+      // Transport to main website view
+      document.getElementById('portal-view').classList.add('hidden');
+      const webView = document.getElementById('website-view');
+      if (webView) webView.classList.remove('hidden');
+      document.getElementById('app-subnav').classList.remove('hidden');
+
+      document.getElementById('nav-logged-out').classList.add('hidden');
+      document.getElementById('nav-logged-in').classList.remove('hidden');
+
+      updateUserUI();
+      switchTab('feed');
+    }
+
+    function updateUserUI() {
+      if (!currentProfile) return;
+
+      const isExec = currentProfile.role === 'exec';
+      const isGuest = currentProfile.role === 'guest';
+
+      // Update Nav
+      document.getElementById('nav-username').innerText = `@${currentProfile.username}`;
+      document.getElementById('nav-role-badge').innerText = currentProfile.role.toUpperCase();
+      
+      if (isGuest) {
+        document.getElementById('nav-role-badge').className = "px-2.5 py-1 text-xs font-bold rounded-full bg-slate-200 text-slate-700 border border-slate-300 uppercase tracking-wider";
+      } else if (isExec) {
+        document.getElementById('nav-role-badge').className = "px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wider";
+      } else {
+        document.getElementById('nav-role-badge').className = "px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-[#008CC3] border border-blue-200 uppercase tracking-wider";
+      }
+
+      // Exec-only elements
+      const execTabBtn = document.getElementById('tab-btn-exec');
+      const addEventBtn = document.getElementById('add-event-btn');
+
+      if (isExec) {
+        if (execTabBtn) execTabBtn.classList.remove('hidden');
+        if (addEventBtn) addEventBtn.classList.remove('hidden');
+      } else {
+        if (execTabBtn) execTabBtn.classList.add('hidden');
+        if (addEventBtn) addEventBtn.classList.add('hidden');
+      }
+
+      // Account Tab Details
+      const accUser = document.getElementById('acc-username-display');
+      const accRole = document.getElementById('acc-role-display');
+      if (accUser) accUser.innerText = `@${currentProfile.username}`;
+      if (accRole) accRole.innerText = currentProfile.role.toUpperCase();
+
+      renderFeed();
+      renderEvents();
+      renderPendingQueue();
+    }
+
+    function openProposalModal() {
+      if (currentProfile?.role === 'guest') {
+        showToast("Guests cannot submit requests or proposals. Please sign in or create an account.", "error");
+        return;
+      }
+      document.getElementById('proposal-modal').classList.remove('hidden');
+    }
+
+    function closeProposalModal() {
+      document.getElementById('proposal-modal').classList.add('hidden');
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('ideas-feed-container');
+      if (!container) return;
+
+      const isExec = currentProfile?.role === 'exec';
+
+      let visible = mockIdeas.filter(idea => {
+        if (idea.status === 'approved') return true;
+        if (idea.username === currentProfile?.username) return true;
+        if (isExec) return true;
+        return false;
+      });
+
+      if (activeCategoryFilter !== 'all') {
+        visible = visible.filter(i => i.committee === activeCategoryFilter);
+      }
+
+      const approvedCount = mockIdeas.filter(i => i.status === 'approved').length;
+      const pendingCount = mockIdeas.filter(i => i.status === 'pending').length;
+
+      const statApproved = document.getElementById('stat-approved-count');
+      const statPending = document.getElementById('stat-pending-count');
+      const pendingBadge = document.getElementById('pending-badge-count');
+
+      if (statApproved) statApproved.innerText = approvedCount;
+      if (statPending) statPending.innerText = pendingCount;
+      if (pendingBadge) pendingBadge.innerText = pendingCount;
+
+      if (visible.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+            <p class="text-sm font-semibold">No proposals found in this committee view.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const committeeBadges = {
+        events: { label: '🎨 Events', bg: 'bg-purple-100 text-purple-700' },
+        fundraising: { label: '💰 Fundraising', bg: 'bg-emerald-100 text-emerald-700' },
+        media: { label: '📱 Media', bg: 'bg-blue-100 text-blue-700' },
+        awareness: { label: '💡 Awareness', bg: 'bg-amber-100 text-amber-700' }
+      };
+
+      container.innerHTML = visible.map(idea => {
+        const badge = committeeBadges[idea.committee] || { label: idea.committee, bg: 'bg-slate-100' };
+        const isPending = idea.status === 'pending';
+
+        return `
+          <div class="bg-white p-5 rounded-xl border ${isPending ? 'border-amber-300 bg-amber-50/30' : 'border-slate-200'} shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="px-2.5 py-1 rounded-md text-xs font-bold ${badge.bg}">
+                  ${badge.label}
+                </span>
+                ${isPending ? `
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    <i class="fa-solid fa-clock mr-1"></i> Pending Review
+                  </span>
+                ` : `
+                  <span class="text-xs text-slate-400 font-medium">
+                    ${new Date(idea.created_at).toLocaleDateString()}
+                  </span>
+                `}
+              </div>
+
+              <h4 class="text-base font-bold text-slate-800 mb-1">${escapeHtml(idea.title)}</h4>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">${escapeHtml(idea.description)}</p>
+
+              ${idea.file ? `
+                <div class="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
+                  <div class="flex items-center space-x-2 text-slate-700 truncate">
+                    <i class="fa-solid fa-paperclip text-[#00ADEF]"></i>
+                    <span class="font-medium truncate">${escapeHtml(idea.file.name)}</span>
+                  </div>
+                  <a href="${idea.file.url}" target="_blank" onclick="if('${idea.file.url}'==='#'){ event.preventDefault(); showToast('Attachment previewing mode', 'info'); }" class="text-[#00ADEF] hover:underline font-bold text-xs shrink-0 ml-2">
+                    View Attachment
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+              <span class="font-semibold text-slate-500">By @${escapeHtml(idea.username)}</span>
+              
+              <div class="flex items-center space-x-2">
+                <button onclick="upvoteIdea('${idea.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-[#00ADEF] text-slate-600 rounded-lg font-bold flex items-center space-x-1 transition">
+                  <i class="fa-solid fa-thumbs-up"></i>
+                  <span>${idea.upvotes || 0}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    function handleProposalSubmit(e) {
+      e.preventDefault();
+      if (!currentProfile) return;
+
+      if (currentProfile.role === 'guest') {
+        showToast("Guests cannot submit requests or proposals.", "error");
+        return;
+      }
+
+      const title = document.getElementById('prop-title').value.trim();
+      const committee = document.getElementById('prop-committee').value;
+      const description = document.getElementById('prop-description').value.trim();
+      const fileInput = document.getElementById('prop-file');
+
+      if (!title || !description) {
+        showToast("Please complete all required fields.", "error");
+        return;
+      }
+
+      let attachedFile = null;
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        attachedFile = {
+          name: file.name,
+          size: file.size,
+          url: URL.createObjectURL(file)
+        };
+      }
+
+      const newProp = {
+        id: 'prop_' + Date.now(),
+        title,
+        committee,
+        description,
+        status: 'pending',
+        username: currentProfile.username,
+        created_at: new Date().toISOString(),
+        upvotes: 0,
+        file: attachedFile
+      };
+
+      mockIdeas.unshift(newProp);
+
+      if (supabaseClient) {
+        try {
+          supabaseClient.from('ideas').insert([
+            { user_id: currentProfile.id, title, committee, description, status: 'pending', attachment_url: attachedFile ? attachedFile.name : null }
+          ]);
+        } catch(err){}
+      }
+
+      closeProposalModal();
+      document.getElementById('prop-title').value = '';
+      document.getElementById('prop-description').value = '';
+      if (fileInput) fileInput.value = '';
+
+      renderFeed();
+      renderPendingQueue();
+      showToast("Proposal and attached file submitted for Executive review!", "success");
+    }
+
+    function upvoteIdea(id) {
+      if (currentProfile?.role === 'guest') {
+        showToast("Guest users must sign in to upvote proposals.", "error");
+        return;
+      }
+      const idea = mockIdeas.find(i => i.id === id);
+      if (idea) {
+        idea.upvotes = (idea.upvotes || 0) + 1;
+        renderFeed();
+        showToast("Upvoted proposal!", "success");
+      }
+    }
+
+    // ----------------------------------------------------
+    // EXEC APPROVAL QUEUE MODERATION
+    // ----------------------------------------------------
+    function renderPendingQueue() {
+      const container = document.getElementById('pending-proposals-list');
+      if (!container) return;
+
+      const pending = mockIdeas.filter(i => i.status === 'pending');
+
+      if (pending.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-6 rounded-xl border border-slate-200 text-center text-slate-400">
+            <i class="fa-solid fa-circle-check text-2xl text-emerald-500 mb-1"></i>
+            <p class="text-xs font-bold text-slate-600">All caught up! No pending proposals awaiting approval.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = pending.map(item => `
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2 mb-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase">
+                ${item.committee}
+              </span>
+              <span class="text-xs text-slate-400">Submitted by @${item.username}</span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm">${escapeHtml(item.title)}</h4>
+            <p class="text-xs text-slate-600 mt-1 max-w-xl">${escapeHtml(item.description)}</p>
+          </div>
+
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="reviewProposal('${item.id}', 'rejected')" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-xs rounded-lg transition">
+              Reject
+            </button>
+            <button onclick="reviewProposal('${item.id}', 'approved')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition">
+              Approve & Publish
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function reviewProposal(id, newStatus) {
+      const item = mockIdeas.find(i => i.id === id);
+      if (item) {
+        item.status = newStatus;
+        renderFeed();
+        renderPendingQueue();
+        showToast(`Proposal has been ${newStatus.toUpperCase()}`, newStatus === 'approved' ? 'success' : 'info');
+      }
+    }
+
+    // ----------------------------------------------------
+    // EVENTS CALENDAR MODAL & ENGINE
+    // ----------------------------------------------------
+    function renderEvents() {
+      const container = document.getElementById('events-grid');
+      if (!container) return;
+
+      const statEvents = document.getElementById('stat-events-count');
+      if (statEvents) statEvents.innerText = mockEvents.length;
+
+      container.innerHTML = mockEvents.map(evt => `
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 hover:border-[#00ADEF] transition flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-[#008CC3] uppercase">
+                ${evt.committee}
+              </span>
+              <span class="text-xs font-bold text-[#00ADEF]">
+                <i class="fa-solid fa-clock mr-1"></i>${evt.event_date}
+              </span>
+            </div>
+            <h4 class="font-bold text-slate-800 text-sm mb-1">${escapeHtml(evt.title)}</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">${escapeHtml(evt.description)}</p>
+          </div>
+
+          <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <span><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>${escapeHtml(evt.location)}</span>
+            <button onclick="showToast('RSVP Recorded!', 'success')" class="text-[#00ADEF] font-bold hover:underline">
+              RSVP
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openEventModal() {
+      document.getElementById('event-modal').classList.remove('hidden');
+    }
+
+    function closeEventModal() {
+      document.getElementById('event-modal').classList.add('hidden');
+    }
+
+    function handleEventSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('evt-title').value.trim();
+      const date = document.getElementById('evt-date').value;
+      const location = document.getElementById('evt-location').value.trim();
+      const committee = document.getElementById('evt-committee').value;
+      const description = document.getElementById('evt-description').value.trim();
+
+      mockEvents.unshift({
+        id: 'e_' + Date.now(),
+        title,
+        event_date: date,
+        location,
+        committee,
+        description
+      });
+
+      closeEventModal();
+      renderEvents();
+      showToast("Event published to Chapter Calendar!", "success");
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const newPass = document.getElementById('new-password').value;
+      const confirmPass = document.getElementById('confirm-password').value;
+
+      if (newPass.length < 8) {
+        showToast("Password must be at least 8 characters long.", "error");
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        showToast("Passwords do not match.", "error");
+        return;
+      }
+
+      if (supabaseClient) {
+        try {
+          const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+          if (error) {
+            showToast(error.message, "error");
+            return;
+          }
+        } catch(e){}
+      }
+
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      showToast("Password updated successfully!", "success");
+    }
+
+    // ----------------------------------------------------
+    // TOAST NOTIFICATIONS & UTILITY FUNCTIONS
+    // ----------------------------------------------------
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      
+      const bgColors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-[#1C2B36] text-white border-l-4 border-[#00ADEF]'
+      };
+
+      toast.className = `p-4 rounded-xl shadow-xl text-xs font-bold flex items-center justify-between pointer-events-auto toast-animate ${bgColors[type] || bgColors.info}`;
+      toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle'}"></i>
+          <span>${message}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="ml-4 opacity-70 hover:opacity-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 4000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[match]));
+    }
+  </script>
+</body>
+</html>
