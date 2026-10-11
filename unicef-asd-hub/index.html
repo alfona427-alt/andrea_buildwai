@@ -172,7 +172,7 @@
             </div>
             <div class="flex items-center space-x-3 text-xs text-slate-300">
               <i class="fa-solid fa-check-circle text-[#00ADEF]"></i>
-              <span>Direct Supabase Identity Integration</span>
+              <span>GitHub OAuth & Supabase Integration</span>
             </div>
             <div class="flex items-center space-x-3 text-xs text-slate-300">
               <i class="fa-solid fa-check-circle text-[#00ADEF]"></i>
@@ -184,6 +184,18 @@
         <!-- Right Sign In / Up Form Panel -->
         <div class="md:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
           
+          <!-- GitHub OAuth Button -->
+          <div class="mb-6">
+            <button type="button" onclick="handleGitHubSignIn()" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center space-x-3 border border-slate-700">
+              <i class="fa-brands fa-github text-xl"></i>
+              <span>Continue with GitHub</span>
+            </button>
+            <div class="relative my-6">
+              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+              <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-3 text-slate-400 font-semibold">Or use email address</span></div>
+            </div>
+          </div>
+
           <!-- Portal Tabs Header -->
           <div class="flex border-b border-slate-200 mb-6">
             <button onclick="toggleAuthTab('signin')" id="auth-tab-signin" class="pb-3 px-4 font-bold text-sm text-[#00ADEF] border-b-2 border-[#00ADEF] transition">
@@ -260,240 +272,241 @@
           </div>
 
           <!-- Guest Access Option -->
-        <button onclick="continueAsGuest()" class="w-full p-3 border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-eye text-slate-500"></i>
-          <span>Continue as Guest (Read-Only Access)</span>
-        </button>
+          <button onclick="continueAsGuest()" class="w-full p-3 border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-eye text-slate-500"></i>
+            <span>Continue as Guest (Read-Only Access)</span>
+          </button>
 
-      </div>
-    </div>
-  </div>
-  <!-- WEBSITE DASHBOARD VIEW (Shown upon sign-in / guest access) -->
-  <div id="website-view" class="hidden space-y-6 max-w-7xl w-full mx-auto">
-    <!-- Quick Chapter Metrics Bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-        <div class="p-3 bg-blue-50 text-[#00ADEF] rounded-xl text-xl">
-          <i class="fa-solid fa-lightbulb"></i>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 font-medium">Approved Ideas</p>
-          <h4 id="stat-approved-count" class="text-xl font-bold text-slate-800">0</h4>
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 font-medium">Pending Review</p>
-          <h4 id="stat-pending-count" class="text-xl font-bold text-slate-800">0</h4>
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl">
-          <i class="fa-solid fa-calendar-check"></i>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 font-medium">Upcoming Events</p>
-          <h4 id="stat-events-count" class="text-xl font-bold text-slate-800">0</h4>
-        </div>
-      </div>
-
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
-        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl text-xl">
-          <i class="fa-solid fa-users"></i>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 font-medium">Active Members</p>
-          <h4 class="text-xl font-bold text-slate-800">42</h4>
         </div>
       </div>
     </div>
 
-    <!-- TAB 1: PROPOSALS & IDEAS FEED -->
-    <section id="sec-feed" class="space-y-6">
-      
-      <!-- Committee Filter & Controls -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">Committees:</span>
-          <button onclick="filterCommittees('all')" id="btn-filter-all" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00ADEF] text-white">
-            All Committees
-          </button>
-          <button onclick="filterCommittees('events')" id="btn-filter-events" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
-            🎨 Events
-          </button>
-          <button onclick="filterCommittees('fundraising')" id="btn-filter-fundraising" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
-            💰 Fundraising
-          </button>
-          <button onclick="filterCommittees('media')" id="btn-filter-media" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
-            📱 Media
-          </button>
-          <button onclick="filterCommittees('awareness')" id="btn-filter-awareness" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
-            💡 Awareness
-          </button>
-        </div>
-
-        <div class="flex items-center space-x-2">
-          <input type="text" id="feed-search-input" onkeyup="searchProposals()" placeholder="Search proposals..." 
-                 class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
-          <button onclick="openProposalModal()" class="px-4 py-1.5 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-1 shrink-0">
-            <i class="fa-solid fa-plus text-xs"></i>
-            <span>New Proposal</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Proposals List Feed -->
-      <div id="ideas-feed-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Dynamically Populated -->
-      </div>
-    </section>
-
-    <!-- TAB 2: EVENT CALENDAR -->
-    <section id="sec-events" class="hidden space-y-6">
-      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <!-- WEBSITE DASHBOARD VIEW (Shown upon sign-in / guest access) -->
+    <div id="website-view" class="hidden space-y-6 max-w-7xl w-full mx-auto">
+      <!-- Quick Chapter Metrics Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-blue-50 text-[#00ADEF] rounded-xl text-xl">
+            <i class="fa-solid fa-lightbulb"></i>
+          </div>
           <div>
-            <h3 class="text-xl font-bold text-slate-800">ASD Chapter Event Calendar</h3>
-            <p class="text-xs text-slate-500">Upcoming global advocacy drives, school bake sales, and committee meetings.</p>
+            <p class="text-xs text-slate-500 font-medium">Approved Ideas</p>
+            <h4 id="stat-approved-count" class="text-xl font-bold text-slate-800">0</h4>
           </div>
-          <button id="add-event-btn" onclick="openEventModal()" class="hidden px-4 py-2 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-2">
-            <i class="fa-solid fa-plus"></i>
-            <span>Schedule New Event (Exec)</span>
-          </button>
         </div>
 
-        <!-- Events Grid -->
-        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Dynamically populated -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Pending Review</p>
+            <h4 id="stat-pending-count" class="text-xl font-bold text-slate-800">0</h4>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Upcoming Events</p>
+            <h4 id="stat-events-count" class="text-xl font-bold text-slate-800">0</h4>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="p-3 bg-purple-50 text-purple-600 rounded-xl text-xl">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Active Members</p>
+            <h4 class="text-xl font-bold text-slate-800">42</h4>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- TAB 3: MONTHLY SPOTLIGHT CAUSE -->
-    <section id="sec-spotlight" class="hidden space-y-6">
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="relative h-64 sm:h-80 bg-slate-900">
-          <img id="spotlight-image" src="https://images.unsplash.com/photo-1541976844346-f18aeac57b06?auto=format&fit=crop&w=1200&q=80" 
-               alt="Monthly Cause Banner" class="w-full h-full object-cover opacity-60" />
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent p-6 sm:p-10 flex flex-col justify-end">
-            <span class="inline-block px-3 py-1 bg-[#00ADEF] text-white rounded-full text-xs font-bold uppercase tracking-wider mb-2 w-max">
-              Current Cause Spotlight
-            </span>
-            <h3 id="spotlight-title" class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
-              Clean Water & Sanitation Initiative
-            </h3>
-            <p class="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">
-              Highlighting UNICEF's global mission to provide clean drinking water, hygiene education, and sustainable infrastructure to vulnerable communities.
-            </p>
-          </div>
-        </div>
-
-        <div class="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="md:col-span-2 space-y-4">
-            <h4 class="text-lg font-bold text-slate-800 border-b pb-2">Campaign Overview & Objectives</h4>
-            <p id="spotlight-description" class="text-sm text-slate-600 leading-relaxed">
-              This month, the ASD Chapter is raising awareness and funds for solar-powered water pumps in crisis areas. Over 1,000 children die daily from diseases caused by unsafe water. ASD students can contribute by leading educational drives or submitting fundraising event proposals.
-            </p>
-            
-            <!-- Progress Bar -->
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-              <div class="flex justify-between text-xs font-bold text-slate-700">
-                <span>ASD Fundraising Goal: $2,500</span>
-                <span class="text-[#00ADEF]">68% Reached</span>
-              </div>
-              <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                <div class="bg-[#00ADEF] h-full rounded-full" style="width: 68%;"></div>
-              </div>
-            </div>
+      <!-- TAB 1: PROPOSALS & IDEAS FEED -->
+      <section id="sec-feed" class="space-y-6">
+        
+        <!-- Committee Filter & Controls -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">Committees:</span>
+            <button onclick="filterCommittees('all')" id="btn-filter-all" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00ADEF] text-white">
+              All Committees
+            </button>
+            <button onclick="filterCommittees('events')" id="btn-filter-events" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+              🎨 Events
+            </button>
+            <button onclick="filterCommittees('fundraising')" id="btn-filter-fundraising" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+              💰 Fundraising
+            </button>
+            <button onclick="filterCommittees('media')" id="btn-filter-media" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+              📱 Media
+            </button>
+            <button onclick="filterCommittees('awareness')" id="btn-filter-awareness" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">
+              💡 Awareness
+            </button>
           </div>
 
-          <!-- Side Action Box -->
-          <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl flex flex-col justify-between space-y-4">
-            <div>
-              <h5 class="font-bold text-slate-800 text-sm mb-1">Get Involved</h5>
-              <p class="text-xs text-slate-600">Submit a proposal to your committee or volunteer for the upcoming awareness drive.</p>
-            </div>
-            <button onclick="openProposalModal()" class="w-full py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
-              Propose Cause Idea
+          <div class="flex items-center space-x-2">
+            <input type="text" id="feed-search-input" onkeyup="searchProposals()" placeholder="Search proposals..." 
+                   class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+            <button onclick="openProposalModal()" class="px-4 py-1.5 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-1 shrink-0">
+              <i class="fa-solid fa-plus text-xs"></i>
+              <span>New Proposal</span>
             </button>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- TAB 4: EXECUTIVE APPROVAL QUEUE (Execs Only) -->
-    <section id="sec-exec" class="hidden space-y-6">
-      <div class="bg-amber-50/60 border border-amber-200 p-6 rounded-2xl shadow-sm">
-        <div class="flex items-center space-x-3 mb-4">
-          <div class="p-2 bg-amber-500 text-white rounded-lg">
-            <i class="fa-solid fa-shield-halved text-xl"></i>
+        <!-- Proposals List Feed -->
+        <div id="ideas-feed-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically Populated -->
+        </div>
+      </section>
+
+      <!-- TAB 2: EVENT CALENDAR -->
+      <section id="sec-events" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="text-xl font-bold text-slate-800">ASD Chapter Event Calendar</h3>
+              <p class="text-xs text-slate-500">Upcoming global advocacy drives, school bake sales, and committee meetings.</p>
+            </div>
+            <button id="add-event-btn" onclick="openEventModal()" class="hidden px-4 py-2 bg-[#00ADEF] text-white text-xs font-bold rounded-lg hover:bg-[#008CC3] transition flex items-center space-x-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Schedule New Event (Exec)</span>
+            </button>
           </div>
-          <div>
-            <h3 class="text-xl font-bold text-slate-900">Executive Moderation Queue</h3>
-            <p class="text-xs text-slate-600">Review member proposals before they appear on the public chapter feed.</p>
+
+          <!-- Events Grid -->
+          <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically populated -->
           </div>
         </div>
+      </section>
 
-        <!-- Pending Proposals Table/List -->
-        <div id="pending-proposals-list" class="space-y-4">
-          <!-- Dynamically populated -->
+      <!-- TAB 3: MONTHLY SPOTLIGHT CAUSE -->
+      <section id="sec-spotlight" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="relative h-64 sm:h-80 bg-slate-900">
+            <img id="spotlight-image" src="https://images.unsplash.com/photo-1541976844346-f18aeac57b06?auto=format&fit=crop&w=1200&q=80" 
+                 alt="Monthly Cause Banner" class="w-full h-full object-cover opacity-60" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent p-6 sm:p-10 flex flex-col justify-end">
+              <span class="inline-block px-3 py-1 bg-[#00ADEF] text-white rounded-full text-xs font-bold uppercase tracking-wider mb-2 w-max">
+                Current Cause Spotlight
+              </span>
+              <h3 id="spotlight-title" class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+                Clean Water & Sanitation Initiative
+              </h3>
+              <p class="text-slate-300 text-xs sm:text-sm mt-2 max-w-2xl">
+                Highlighting UNICEF's global mission to provide clean drinking water, hygiene education, and sustainable infrastructure to vulnerable communities.
+              </p>
+            </div>
+          </div>
+
+          <div class="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 space-y-4">
+              <h4 class="text-lg font-bold text-slate-800 border-b pb-2">Campaign Overview & Objectives</h4>
+              <p id="spotlight-description" class="text-sm text-slate-600 leading-relaxed">
+                This month, the ASD Chapter is raising awareness and funds for solar-powered water pumps in crisis areas. Over 1,000 children die daily from diseases caused by unsafe water. ASD students can contribute by leading educational drives or submitting fundraising event proposals.
+              </p>
+              
+              <!-- Progress Bar -->
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                <div class="flex justify-between text-xs font-bold text-slate-700">
+                  <span>ASD Fundraising Goal: $2,500</span>
+                  <span class="text-[#00ADEF]">68% Reached</span>
+                </div>
+                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                  <div class="bg-[#00ADEF] h-full rounded-full" style="width: 68%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Side Action Box -->
+            <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl flex flex-col justify-between space-y-4">
+              <div>
+                <h5 class="font-bold text-slate-800 text-sm mb-1">Get Involved</h5>
+                <p class="text-xs text-slate-600">Submit a proposal to your committee or volunteer for the upcoming awareness drive.</p>
+              </div>
+              <button onclick="openProposalModal()" class="w-full py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
+                Propose Cause Idea
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- TAB 5: ACCOUNT & SECURITY SETTINGS -->
-    <section id="sec-account" class="hidden space-y-6 max-w-2xl mx-auto">
-      <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-        <div class="border-b border-slate-200 pb-4">
-          <h3 class="text-xl font-bold text-slate-800">Account Overview & Security</h3>
-          <p class="text-xs text-slate-500">Manage your password and profile metadata.</p>
-        </div>
+      <!-- TAB 4: EXECUTIVE APPROVAL QUEUE (Execs Only) -->
+      <section id="sec-exec" class="hidden space-y-6">
+        <div class="bg-amber-50/60 border border-amber-200 p-6 rounded-2xl shadow-sm">
+          <div class="flex items-center space-x-3 mb-4">
+            <div class="p-2 bg-amber-500 text-white rounded-lg">
+              <i class="fa-solid fa-shield-halved text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-slate-900">Executive Moderation Queue</h3>
+              <p class="text-xs text-slate-600">Review member proposals before they appear on the public chapter feed.</p>
+            </div>
+          </div>
 
-        <!-- Profile Info Box -->
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-          <div class="flex justify-between text-xs">
-            <span class="text-slate-500 font-semibold">Logged-in User:</span>
-            <span id="acc-username-display" class="font-bold text-slate-800">@username</span>
-          </div>
-          <div class="flex justify-between text-xs">
-            <span class="text-slate-500 font-semibold">User Role:</span>
-            <span id="acc-role-display" class="font-bold text-[#008CC3] uppercase">MEMBER</span>
-          </div>
-          <div class="flex justify-between text-xs">
-            <span class="text-slate-500 font-semibold">Auth Provider:</span>
-            <span id="acc-provider-display" class="font-bold text-slate-600">Supabase Auth</span>
+          <!-- Pending Proposals Table/List -->
+          <div id="pending-proposals-list" class="space-y-4">
+            <!-- Dynamically populated -->
           </div>
         </div>
+      </section>
 
-        <!-- Self-Service Change Password Form -->
-        <form onsubmit="handleChangePassword(event)" class="space-y-4 pt-2">
-          <h4 class="text-sm font-bold text-slate-800">Update Password</h4>
-          
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">New Password</label>
-            <input type="password" id="new-password" required placeholder="Min. 8 characters" 
-                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+      <!-- TAB 5: ACCOUNT & SECURITY SETTINGS -->
+      <section id="sec-account" class="hidden space-y-6 max-w-2xl mx-auto">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="border-b border-slate-200 pb-4">
+            <h3 class="text-xl font-bold text-slate-800">Account Overview & Security</h3>
+            <p class="text-xs text-slate-500">Manage your profile metadata and authentication source.</p>
           </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password</label>
-            <input type="password" id="confirm-password" required placeholder="Re-enter password" 
-                   class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+          <!-- Profile Info Box -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-500 font-semibold">Logged-in User:</span>
+              <span id="acc-username-display" class="font-bold text-slate-800">@username</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-500 font-semibold">User Role:</span>
+              <span id="acc-role-display" class="font-bold text-[#008CC3] uppercase">MEMBER</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-500 font-semibold">Auth Provider:</span>
+              <span id="acc-provider-display" class="font-bold text-slate-600">Supabase Auth</span>
+            </div>
           </div>
 
-          <button type="submit" class="px-5 py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
-            Change Password
-          </button>
-        </form>
-      </div>
-    </section>
+          <!-- Password change available for email/pass users -->
+          <form onsubmit="handleChangePassword(event)" class="space-y-4 pt-2">
+            <h4 class="text-sm font-bold text-slate-800">Update Password</h4>
+            
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">New Password</label>
+              <input type="password" id="new-password" required placeholder="Min. 8 characters" 
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+            </div>
 
-  </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password</label>
+              <input type="password" id="confirm-password" required placeholder="Re-enter password" 
+                     class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00ADEF]" />
+            </div>
+
+            <button type="submit" class="px-5 py-2.5 bg-[#00ADEF] hover:bg-[#008CC3] text-white font-bold text-xs rounded-lg transition shadow-sm">
+              Change Password
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
   </main>
 
   <!-- PROPOSAL SUBMISSION MODAL -->
@@ -630,9 +643,10 @@
     } catch (err) {
       console.warn("Supabase init fallback to client mode:", err);
     }
+
     // State Variables
     let currentUser = null;
-    let currentProfile = null; // { id, username, role: 'exec' | 'member' | 'guest' }
+    let currentProfile = null; // { id, username, role: 'exec' | 'member' | 'guest', authProvider }
     let authTabMode = 'signin';
     let activeCategoryFilter = 'all';
 
@@ -693,10 +707,17 @@
 
     async function initAppAuth() {
       if (supabaseClient) {
+        // Listen for authentication changes (handles OAuth redirect callbacks)
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          if (session?.user) {
+            await syncUserProfileAndSession(session.user);
+          }
+        });
+
         try {
           const { data: { session } } = await supabaseClient.auth.getSession();
           if (session?.user) {
-            setupUserSession(session.user, 'member');
+            await syncUserProfileAndSession(session.user);
             return;
           }
         } catch (e) {
@@ -706,6 +727,75 @@
       
       // Default: Logged Out (Show Portal)
       showLoggedOutUI();
+    }
+
+    async function syncUserProfileAndSession(user) {
+      let role = 'member';
+      let username = user.user_metadata?.preferred_username || user.user_metadata?.user_name || user.email?.split('@')[0] || 'student';
+      let provider = user.app_metadata?.provider || 'email';
+
+      if (supabaseClient) {
+        try {
+          let { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (!profile) {
+            // Auto-create missing profile for OAuth / New Users
+            const { data: newProfile, error: profileErr } = await supabaseClient
+              .from('profiles')
+              .insert([{
+                id: user.id,
+                username: username,
+                role: 'member',
+                auth_provider: provider
+              }])
+              .select()
+              .single();
+
+            if (newProfile) profile = newProfile;
+          }
+
+          if (profile) {
+            role = profile.role || 'member';
+            username = profile.username || username;
+            provider = profile.auth_provider || provider;
+          }
+        } catch (err) {
+          console.log("Profile fetching notice:", err);
+        }
+      }
+
+      setupUserSession(user, role, username, provider);
+    }
+
+    async function handleGitHubSignIn() {
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+              redirectTo: window.location.href
+            }
+          });
+          if (error) {
+            showToast(error.message, "error");
+          }
+        } catch (err) {
+          showToast("GitHub OAuth initialization error: " + err.message, "error");
+        }
+      } else {
+        // Fallback simulation mode
+        const mockGitHubUser = {
+          id: 'gh_' + Date.now(),
+          email: 'github_student@asd.edu.qa',
+          app_metadata: { provider: 'github' }
+        };
+        setupUserSession(mockGitHubUser, 'member', 'github_student', 'github');
+        showToast("Signed in via GitHub (Simulation Mode)", "success");
+      }
     }
 
     function showLoggedOutUI() {
@@ -843,7 +933,7 @@
               await supabaseClient.from('profiles').insert([
                 { id: data.user.id, username, role: selectedRole, auth_provider: 'email' }
               ]);
-              setupUserSession(data.user, selectedRole, username);
+              setupUserSession(data.user, selectedRole, username, 'email');
               showToast("Account registered successfully!", "success");
               return;
             }
@@ -852,7 +942,7 @@
           }
         }
 
-        setupUserSession({ id: 'user_' + Date.now(), email }, selectedRole, username);
+        setupUserSession({ id: 'user_' + Date.now(), email }, selectedRole, username, 'email');
         showToast(`Welcome @${username}! Account registered as ${selectedRole.toUpperCase()}.`, "success");
 
       } else {
@@ -863,7 +953,7 @@
               const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', data.user.id).single();
               const role = profile?.role || 'member';
               const userHandle = profile?.username || email.split('@')[0];
-              setupUserSession(data.user, role, userHandle);
+              setupUserSession(data.user, role, userHandle, 'email');
               showToast("Signed in successfully!", "success");
               return;
             }
@@ -874,13 +964,13 @@
 
         const inferredRole = email.includes('exec') ? 'exec' : 'member';
         const inferredUsername = email.split('@')[0];
-        setupUserSession({ id: 'user_1', email }, inferredRole, inferredUsername);
+        setupUserSession({ id: 'user_1', email }, inferredRole, inferredUsername, 'email');
         showToast(`Signed in as @${inferredUsername} (${inferredRole.toUpperCase()})`, "success");
       }
     }
 
     function continueAsGuest() {
-      setupUserSession({ id: 'guest_visitor' }, 'guest', 'Guest');
+      setupUserSession({ id: 'guest_visitor' }, 'guest', 'Guest', 'guest');
       showToast("Browsing UNICEF ASD Chapter Hub as Guest.", "info");
     }
 
@@ -891,12 +981,13 @@
       document.getElementById('app-subnav').classList.add('hidden');
     }
 
-    function setupUserSession(user, role = 'member', username = '') {
+    function setupUserSession(user, role = 'member', username = '', provider = 'email') {
       currentUser = user;
       currentProfile = {
         id: user?.id || 'user_id',
         username: username || (role === 'guest' ? 'Guest' : (user?.email ? user.email.split('@')[0] : 'student')),
-        role: role
+        role: role,
+        authProvider: provider
       };
 
       // Transport to main website view
@@ -945,8 +1036,10 @@
       // Account Tab Details
       const accUser = document.getElementById('acc-username-display');
       const accRole = document.getElementById('acc-role-display');
+      const accProvider = document.getElementById('acc-provider-display');
       if (accUser) accUser.innerText = `@${currentProfile.username}`;
       if (accRole) accRole.innerText = currentProfile.role.toUpperCase();
+      if (accProvider) accProvider.innerText = (currentProfile.authProvider || 'Supabase Auth').toUpperCase();
 
       renderFeed();
       renderEvents();
@@ -1062,6 +1155,7 @@
         `;
       }).join('');
     }
+
     function handleProposalSubmit(e) {
       e.preventDefault();
       if (!currentProfile) return;
@@ -1074,21 +1168,10 @@
       const title = document.getElementById('prop-title').value.trim();
       const committee = document.getElementById('prop-committee').value;
       const description = document.getElementById('prop-description').value.trim();
-      const fileInput = document.getElementById('prop-file');
 
       if (!title || !description) {
         showToast("Please complete all required fields.", "error");
         return;
-      }
-
-      let attachedFile = null;
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        attachedFile = {
-          name: file.name,
-          size: file.size,
-          url: URL.createObjectURL(file)
-        };
       }
 
       const newProp = {
@@ -1100,7 +1183,7 @@
         username: currentProfile.username,
         created_at: new Date().toISOString(),
         upvotes: 0,
-        file: attachedFile
+        file: null
       };
 
       mockIdeas.unshift(newProp);
@@ -1108,7 +1191,7 @@
       if (supabaseClient) {
         try {
           supabaseClient.from('ideas').insert([
-            { user_id: currentProfile.id, title, committee, description, status: 'pending', attachment_url: attachedFile ? attachedFile.name : null }
+            { user_id: currentProfile.id, title, committee, description, status: 'pending' }
           ]);
         } catch(err){}
       }
@@ -1116,11 +1199,10 @@
       closeProposalModal();
       document.getElementById('prop-title').value = '';
       document.getElementById('prop-description').value = '';
-      if (fileInput) fileInput.value = '';
 
       renderFeed();
       renderPendingQueue();
-      showToast("Proposal and attached file submitted for Executive review!", "success");
+      showToast("Proposal submitted for Executive review!", "success");
     }
 
     function upvoteIdea(id) {

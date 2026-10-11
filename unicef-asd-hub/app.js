@@ -10,48 +10,86 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupEventListeners() {
-  document.getElementById("signin-btn").addEventListener("click", handleSignIn);
-  document.getElementById("signup-btn").addEventListener("click", handleSignUp);
-  document.getElementById("logout-btn").addEventListener("click", handleSignOut);
-  document.getElementById("submit-idea-btn").addEventListener("click", handleSubmitIdea);
+  const signinBtn = document.getElementById("signin-btn");
+  const signupBtn = document.getElementById("signup-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const submitIdeaBtn = document.getElementById("submit-idea-btn");
+  const githubBtn = document.getElementById("github-signin-btn");
+
+  if (signinBtn) signinBtn.addEventListener("click", handleSignIn);
+  if (signupBtn) signupBtn.addEventListener("click", handleSignUp);
+  if (logoutBtn) logoutBtn.addEventListener("click", handleSignOut);
+  if (submitIdeaBtn) submitIdeaBtn.addEventListener("click", handleSubmitIdea);
+  if (githubBtn) githubBtn.addEventListener("click", handleGitHubSignIn);
 }
 
 async function initializeAuth() {
   const { data: { session } } = await supabase.auth.getSession();
-  updateAuthState(session?.user || null);
+  if (session?.user) {
+    await updateAuthState(session.user);
+  }
 
-  supabase.auth.onAuthStateChange((_event, session) => {
-    updateAuthState(session?.user || null);
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    if (session?.user) {
+      await updateAuthState(session.user);
+    } else {
+      updateAuthState(null);
+    }
   });
 }
 
 async function updateAuthState(user) {
   currentUser = user;
   if (currentUser) {
-    await fetchUserProfile(currentUser.id);
-    document.getElementById("auth-section").classList.add("hidden");
-    document.getElementById("dashboard-section").classList.remove("hidden");
-    document.getElementById("logout-btn").classList.remove("hidden");
+    await fetchOrCreateUserProfile(currentUser);
+    document.getElementById("auth-section")?.classList.add("hidden");
+    document.getElementById("dashboard-section")?.classList.remove("hidden");
+    document.getElementById("logout-btn")?.classList.remove("hidden");
   } else {
     currentProfile = null;
-    document.getElementById("auth-section").classList.remove("hidden");
-    document.getElementById("dashboard-section").classList.add("hidden");
-    document.getElementById("logout-btn").classList.add("hidden");
+    document.getElementById("auth-section")?.classList.remove("hidden");
+    document.getElementById("dashboard-section")?.classList.add("hidden");
+    document.getElementById("logout-btn")?.classList.add("hidden");
   }
 }
 
-async function fetchUserProfile(userId) {
-  const { data, error } = await supabase
+async function fetchOrCreateUserProfile(user) {
+  const { data } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", userId)
+    .eq("id", user.id)
     .single();
 
   if (data) {
     currentProfile = data;
-    document.getElementById("welcome-msg").innerText = `Welcome, @${data.username}!`;
-    document.getElementById("user-role-badge").innerText = `Role: ${data.role.toUpperCase()}`;
+  } else {
+    // Fallback for new GitHub / OAuth sign-ins
+    const fallbackUsername = user.user_metadata?.preferred_username || user.email?.split("@")[0] || `user_${Date.now()}`;
+    const provider = user.app_metadata?.provider || 'email';
+
+    const { data: newProfile } = await supabase
+      .from("profiles")
+      .insert([{ id: user.id, username: fallbackUsername, role: "member", auth_provider: provider }])
+      .select()
+      .single();
+
+    currentProfile = newProfile || { id: user.id, username: fallbackUsername, role: "member", auth_provider: provider };
   }
+
+  const welcomeEl = document.getElementById("welcome-msg");
+  const roleEl = document.getElementById("user-role-badge");
+  if (welcomeEl) welcomeEl.innerText = `Welcome, @${currentProfile.username}!`;
+  if (roleEl) roleEl.innerText = `Role: ${currentProfile.role.toUpperCase()}`;
+}
+
+export async function handleGitHubSignIn() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: window.location.href
+    }
+  });
+  if (error) alert("GitHub Sign-In Error: " + error.message);
 }
 
 async function handleSignUp() {
@@ -70,7 +108,7 @@ async function handleSignUp() {
   if (data.user) {
     const { error: profileError } = await supabase
       .from("profiles")
-      .insert([{ id: data.user.id, username, auth_provider: "email" }]);
+      .insert([{ id: data.user.id, username, role: "member", auth_provider: "email" }]);
 
     if (profileError) alert("Error creating profile: " + profileError.message);
     else alert("Account created successfully!");
@@ -113,6 +151,8 @@ async function handleSubmitIdea() {
 
 async function loadApprovedIdeas() {
   const feedEl = document.getElementById("ideas-feed");
+  if (!feedEl) return;
+
   const { data, error } = await supabase
     .from("ideas")
     .select("*, profiles(username)")
