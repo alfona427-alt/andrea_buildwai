@@ -133,11 +133,44 @@ async function handleSubmitIdea() {
   const title = document.getElementById("idea-title").value.trim();
   const committee = document.getElementById("idea-committee").value;
   const description = document.getElementById("idea-description").value.trim();
+  const fileInput = document.getElementById("prop-file");
+  const file = fileInput?.files[0];
 
   if (!title || !description) return alert("Please fill in all fields.");
 
+  let attachmentUrl = null;
+
+  // Upload file if selected
+  if (file) {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `ideas/${currentProfile.id}_${Date.now()}.${fileExt}`;
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('idea-attachments')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      alert("File upload error: " + uploadError.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('idea-attachments')
+      .getPublicUrl(filePath);
+
+    attachmentUrl = urlData.publicUrl;
+  }
+
+  // Insert proposal record with attachment URL
   const { error } = await supabase.from("ideas").insert([
-    { user_id: currentProfile.id, title, committee, description, status: "pending" }
+    { 
+      user_id: currentProfile.id, 
+      title, 
+      committee, 
+      description, 
+      attachment_url: attachmentUrl,
+      status: "pending" 
+    }
   ]);
 
   if (error) {
@@ -146,6 +179,7 @@ async function handleSubmitIdea() {
     alert("Proposal submitted! Pending Executive review.");
     document.getElementById("idea-title").value = "";
     document.getElementById("idea-description").value = "";
+    if (fileInput) fileInput.value = "";
   }
 }
 
@@ -173,7 +207,9 @@ async function loadApprovedIdeas() {
     <div style="border-bottom: 1px solid #ddd; padding: 8px 0;">
       <h4>${item.title} <small>(${item.committee.toUpperCase()})</small></h4>
       <p>${item.description}</p>
+      ${item.attachment_url ? `<p><a href="${item.attachment_url}" target="_blank" style="color: #00ADEF;">📎 View Attachment</a></p>` : ''}
       <small>By @${item.profiles?.username || "unknown"}</small>
     </div>
   `).join("");
 }
+
