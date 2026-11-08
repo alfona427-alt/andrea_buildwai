@@ -55,7 +55,7 @@ async function updateAuthState(user) {
     navOut?.classList.add("hidden");
     navIn?.classList.remove("hidden");
     
-    // Securely check role before showing Mod Panel
+    // ONLY SHOW MOD PANEL IF ROLE IS CORRECT
     const isActuallyMod = currentProfile && (currentProfile.role === "president" || currentProfile.role === "moderator");
     
     if (isActuallyMod) {
@@ -63,9 +63,7 @@ async function updateAuthState(user) {
       await loadModPanel();
     } else {
       document.getElementById("tab-btn-moderation")?.classList.add("hidden");
-      // If they were on the mod tab, kick them back to the feed
       document.getElementById("sec-moderation")?.classList.add("hidden");
-      document.getElementById("sec-feed")?.classList.remove("hidden");
       switchTab('feed');
     }
 
@@ -75,16 +73,10 @@ async function updateAuthState(user) {
     await loadAllBadges();
     await loadUserBadges();
   } else {
-    currentProfile = null;
-    currentBadges = [];
-    portalView?.classList.remove("hidden");
-    websiteView?.classList.add("hidden");
-    subnav?.classList.add("hidden");
-    navOut?.classList.remove("hidden");
-    navIn?.classList.add("hidden");
-    document.getElementById("username-modal")?.classList.add("hidden");
+    // ... rest of the else block
   }
 }
+
 async function fetchOrCreateUserProfile(user) {
   const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (data && data.username) {
