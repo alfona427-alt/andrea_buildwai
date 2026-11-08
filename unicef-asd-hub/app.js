@@ -48,12 +48,14 @@ async function updateAuthState(user) {
 
   if (currentUser) {
     await fetchOrCreateUserProfile(currentUser);
+    
     portalView?.classList.add("hidden");
     websiteView?.classList.remove("hidden");
     subnav?.classList.remove("hidden");
     navOut?.classList.add("hidden");
     navIn?.classList.remove("hidden");
-        // Double-check role with the database before showing mod tools
+    
+    // Securely check role before showing Mod Panel
     const isActuallyMod = currentProfile && (currentProfile.role === "president" || currentProfile.role === "moderator");
     
     if (isActuallyMod) {
@@ -64,7 +66,9 @@ async function updateAuthState(user) {
       // If they were on the mod tab, kick them back to the feed
       document.getElementById("sec-moderation")?.classList.add("hidden");
       document.getElementById("sec-feed")?.classList.remove("hidden");
+      switchTab('feed');
     }
+
     await loadIdeasFeed();
     await loadEvents();
     await loadSpotlight();
@@ -81,7 +85,6 @@ async function updateAuthState(user) {
     document.getElementById("username-modal")?.classList.add("hidden");
   }
 }
-
 async function fetchOrCreateUserProfile(user) {
   const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (data && data.username) {
@@ -180,7 +183,13 @@ async function handleSignOut() {
 async function handleUsernameSubmit(e) {
   e.preventDefault();
   if (!currentUser) return;
-  const username = document.getElementById("onboard-username").value.trim();
+  
+  // Automatically strip the @ if the user typed it
+  let username = document.getElementById("onboard-username").value.trim();
+  if (username.startsWith("@")) {
+    username = username.substring(1);
+  }
+  
   const fullname = document.getElementById("onboard-fullname").value.trim();
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return alert("Username must be 3-20 chars (letters/numbers/_).");
 
@@ -192,6 +201,9 @@ async function handleUsernameSubmit(e) {
     id: currentUser.id, username, full_name: fullname, auth_provider: provider
   });
   if (error) return alert("Error: " + error.message);
+  
+  // Hide the modal explicitly after saving
+  document.getElementById("username-modal")?.classList.add("hidden");
   await fetchOrCreateUserProfile(currentUser);
 }
 
