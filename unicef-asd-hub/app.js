@@ -533,6 +533,67 @@ function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
+const PRIVACY_POLICY_HTML = `
+  <p class="text-xs text-slate-500"><strong>Effective date:</strong> 11/10/2026 &nbsp;|&nbsp; <strong>Data controller:</strong> UNICEF Club, American School of Dhahran (ASD) &nbsp;|&nbsp; <strong>Contact:</strong> unicef@unicef.asd</p>
+  <p>This policy explains what information the UNICEF ASD Chapter Hub ("the Hub," "we," "us") collects, why, who can see it, and what you can ask us to do with it. It is consistent with ASD's privacy policy.</p>
+
+  <h4 class="font-bold text-slate-800 pt-2">1. Who can use the Hub</h4>
+  <p>The Hub is open to anyone who has the link. It is intended for users aged 13 and older. We do not verify age or ASD enrollment — access is on an honor-system basis. If you are under 13, please do not use the Hub.</p>
+
+  <h4 class="font-bold text-slate-800 pt-2">2. What we collect</h4>
+  <ul class="list-disc pl-5 space-y-1">
+    <li><strong>Account information:</strong> name, email address, user ID, role, badges, and account creation details. (We do not collect bios, avatars, or grade level.)</li>
+    <li><strong>Content you submit:</strong> proposals/ideas, event details, uploaded files, and reports you file about other content.</li>
+    <li><strong>Authentication data:</strong> if you sign in with GitHub, we receive your email and username from GitHub. Otherwise we use email/password authentication.</li>
+    <li><strong>Essential session storage:</strong> the Hub uses no cookies and no analytics or tracking. Your browser stores only the login session needed to keep you signed in.</li>
+  </ul>
+
+  <h4 class="font-bold text-slate-800 pt-2">3. Why we collect it</h4>
+  <ul class="list-disc pl-5 space-y-1">
+    <li>To run club communication, event scheduling, and committee initiatives</li>
+    <li>To review and approve proposals through the exec-approval queue</li>
+    <li>To moderate content and handle reports</li>
+    <li>To contact members by email about club matters</li>
+    <li>Ideas may be used for club initiatives and records</li>
+  </ul>
+
+  <h4 class="font-bold text-slate-800 pt-2">4. Who can see your data</h4>
+  <ul class="list-disc pl-5 space-y-1">
+    <li>Members can see approved ideas and their own pending submissions.</li>
+    <li>Moderators and the President (Admin) can see all content, review reports, and manage the approval queue.</li>
+    <li>Uploaded files are private. They become downloadable only after the related proposal is approved.</li>
+    <li>We do not sell or share your data with third parties. Our only service providers are Supabase (database, authentication, and file storage, hosted in Southeast Asia) and, if you choose it, GitHub (sign-in only).</li>
+  </ul>
+
+  <h4 class="font-bold text-slate-800 pt-2">5. Uploads and other people's information</h4>
+  <p>Uploads are meant to contain UNICEF-related ideas and materials only. Content that is not appropriate will not be approved by moderators. If you upload anything containing another person's personal information or photo, you must have their consent to share it.</p>
+
+  <h4 class="font-bold text-slate-800 pt-2">6. Reporting and moderation</h4>
+  <p>If you believe content is inappropriate, you can report it. Moderators and the President will review the report and decide on consequences, which may include removing the content.</p>
+
+  <h4 class="font-bold text-slate-800 pt-2">7. Retention and deletion</h4>
+  <ul class="list-disc pl-5 space-y-1">
+    <li>If you leave the club, your account is deleted, but your ideas remain unless you ask us to delete them.</li>
+    <li>You may request deletion of your ideas at any time.</li>
+    <li>Users cannot delete their own accounts. Accounts are deleted by club executives when a member is found to have left the club.</li>
+    <li>Deletion may take some time to complete, but once requested or triggered, the data will be deleted.</li>
+    <li>To request access to, correction of, or deletion of your data, contact unicef@unicef.asd.</li>
+  </ul>
+
+  <h4 class="font-bold text-slate-800 pt-2">8. Changes to this policy</h4>
+  <p>We may update this policy from time to time. The effective date above will change when we do.</p>
+`;
+
+window.openPrivacyPolicy = () => {
+  const content = document.getElementById("privacy-content");
+  if (content && !content.dataset.rendered) {
+    content.innerHTML = PRIVACY_POLICY_HTML;
+    content.dataset.rendered = "true";
+  }
+  document.getElementById("privacy-modal").classList.remove("hidden");
+};
+
+window.closePrivacyPolicy = () => document.getElementById("privacy-modal").classList.add("hidden");
 
 window.openProposalModal = () => document.getElementById("proposal-modal").classList.remove("hidden");
 window.closeProposalModal = () => document.getElementById("proposal-modal").classList.add("hidden");
