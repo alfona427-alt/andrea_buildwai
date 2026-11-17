@@ -14,8 +14,8 @@ let reportTarget = null;
 let confirmCallback = null;
 
 const COMMITTEES = ["events", "fundraising", "media", "awareness"];
-const isMod = () => currentProfile && (currentProfile.role === "president" || currentProfile.role === "moderator");
-const isPresident = () => currentProfile && currentProfile.role === "president";
+const isMod = () => Boolean(currentProfile && (currentProfile.role === "president" || currentProfile.role === "moderator"));
+const isPresident = () => Boolean(currentProfile && currentProfile.role === "president");
 
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
@@ -45,26 +45,35 @@ async function updateAuthState(user) {
   const subnav = document.getElementById("app-subnav");
   const navOut = document.getElementById("nav-logged-out");
   const navIn = document.getElementById("nav-logged-in");
+  const modTabBtn = document.getElementById("tab-btn-moderation");
+  const modSection = document.getElementById("sec-moderation");
 
   if (currentUser) {
     await fetchOrCreateUserProfile(currentUser);
-    
+
     portalView?.classList.add("hidden");
     websiteView?.classList.remove("hidden");
     subnav?.classList.remove("hidden");
     navOut?.classList.add("hidden");
     navIn?.classList.remove("hidden");
-    
-    // ONLY SHOW MOD PANEL IF ROLE IS CORRECT
-    const isActuallyMod = currentProfile && (currentProfile.role === "president" || currentProfile.role === "moderator");
-    
-    if (isActuallyMod) {
-      document.getElementById("tab-btn-moderation")?.classList.remove("hidden");
+
+    // STRICTLY SHOW MOD PANEL ONLY IF ROLE IS MODERATOR OR PRESIDENT
+    if (isMod()) {
+      if (modTabBtn) {
+        modTabBtn.classList.remove("hidden");
+        modTabBtn.style.display = "inline-flex";
+      }
       await loadModPanel();
     } else {
-      document.getElementById("tab-btn-moderation")?.classList.add("hidden");
-      document.getElementById("sec-moderation")?.classList.add("hidden");
-      switchTab('feed');
+      if (modTabBtn) {
+        modTabBtn.classList.add("hidden");
+        modTabBtn.style.display = "none";
+      }
+      if (modSection) {
+        modSection.classList.add("hidden");
+        modSection.style.display = "none";
+      }
+      switchTab("feed");
     }
 
     await loadIdeasFeed();
@@ -73,24 +82,64 @@ async function updateAuthState(user) {
     await loadAllBadges();
     await loadUserBadges();
   } else {
-    // ... rest of the else block
+    currentProfile = null;
+    if (modTabBtn) {
+      modTabBtn.classList.add("hidden");
+      modTabBtn.style.display = "none";
+    }
+    if (modSection) {
+      modSection.classList.add("hidden");
+      modSection.style.display = "none";
+    }
+    portalView?.classList.remove("hidden");
+    websiteView?.classList.add("hidden");
+    subnav?.classList.add("hidden");
+    navOut?.classList.remove("hidden");
+    navIn?.classList.add("hidden");
   }
 }
 
 async function fetchOrCreateUserProfile(user) {
-  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-  if (data && data.username) {
-    currentProfile = data;
-    document.getElementById("username-modal")?.classList.add("hidden");
-  } else {
-    currentProfile = data;
-    // document.getElementById("username-modal")?.classList.remove("hidden");
+  let { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+
+  // Fallback username from signup metadata, GitHub username, or email prefix
+  const fallbackUsername = (
+    user.user_metadata?.username ||
+    user.user_metadata?.user_name ||
+    (user.email ? user.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_") : "")
+  ).slice(0, 20);
+
+  const fallbackFullname = user.user_metadata?.full_name || fallbackUsername;
+
+  if (!data || !data.username) {
+    if (fallbackUsername) {
+      const { data: upserted } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          username: fallbackUsername,
+          full_name: fallbackFullname,
+          auth_provider: user.app_metadata?.provider || "email"
+        })
+        .select("*")
+        .maybeSingle();
+      if (upserted) data = upserted;
+    }
   }
+
+  currentProfile = data || { id: user.id, username: fallbackUsername, role: "member" };
+  document.getElementById("username-modal")?.classList.add("hidden");
+
+  const displayHandle = currentProfile?.username ? `@${currentProfile.username}` : "—";
   const nav = document.getElementById("nav-username");
-  if (nav) nav.innerText = currentProfile?.username ? `@${currentProfile.username}` : "@…";
-  document.getElementById("acc-username-display").innerText = currentProfile?.username ? `@${currentProfile.username}` : "—";
-  document.getElementById("acc-email-display").innerText = user.email || "—";
-  document.getElementById("acc-role-display").innerText = currentProfile?.role || "member";
+  if (nav) nav.innerText = displayHandle;
+
+  const accUser = document.getElementById("acc-username-display");
+  const accEmail = document.getElementById("acc-email-display");
+  const accRole = document.getElementById("acc-role-display");
+  if (accUser) accUser.innerText = displayHandle;
+  if (accEmail) accEmail.innerText = user.email || "—";
+  if (accRole) accRole.innerText = currentProfile?.role || "member";
 }
 
 async function loadUserBadges() {
@@ -139,7 +188,7 @@ async function handleAuthSubmit(e) {
   const password = document.getElementById("auth-password").value.trim();
 
   if (authMode === "signup") {
-    const username = document.getElementById("auth-username").value.trim();
+    const username = document.getElementById("auth-username").value.trim().replace(/^@/, "");
     const fullname = document.getElementById("auth-fullname").value.trim();
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return alert("Username must be 3-20 chars (letters/numbers/_).");
     if (!isStrongPassword(password)) return alert("Password must be 8+ chars with lowercase, uppercase, and a number.");
@@ -147,15 +196,27 @@ async function handleAuthSubmit(e) {
     const { data: existing } = await supabase.from("profiles").select("id").eq("username", username).maybeSingle();
     if (existing) return alert("Username already taken.");
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username, full_name: fullname }
+      }
+    });
     if (error) return alert("Sign Up Error: " + error.message);
 
     if (data.user) {
-      const { error: upErr } = await supabase.from("profiles").upsert({
-        id: data.user.id, username, full_name: fullname, auth_provider: "email"
-      });
-      if (upErr) console.warn("Profile upsert:", upErr.message);
-      if (!data.session) alert("Check your email to confirm, then sign in.");
+      if (data.session) {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          username,
+          full_name: fullname,
+          auth_provider: "email"
+        });
+        await fetchOrCreateUserProfile(data.user);
+      } else {
+        alert("Check your email to confirm, then sign in.");
+      }
     }
   } else {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -175,13 +236,12 @@ async function handleSignOut() {
 async function handleUsernameSubmit(e) {
   e.preventDefault();
   if (!currentUser) return;
-  
-  // Automatically strip the @ if the user typed it
+
   let username = document.getElementById("onboard-username").value.trim();
   if (username.startsWith("@")) {
     username = username.substring(1);
   }
-  
+
   const fullname = document.getElementById("onboard-fullname").value.trim();
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return alert("Username must be 3-20 chars (letters/numbers/_).");
 
@@ -193,8 +253,7 @@ async function handleUsernameSubmit(e) {
     id: currentUser.id, username, full_name: fullname, auth_provider: provider
   });
   if (error) return alert("Error: " + error.message);
-  
-  // Hide the modal explicitly after saving
+
   document.getElementById("username-modal")?.classList.add("hidden");
   await fetchOrCreateUserProfile(currentUser);
 }
@@ -225,7 +284,7 @@ async function handleSubmitIdea() {
   let attachmentPath = null;
   if (file) {
     const MAX = 5 * 1024 * 1024;
-    const ALLOWED = ["image/jpeg","image/png","image/gif","image/webp","application/pdf","text/plain"];
+    const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "text/plain"];
     if (file.size > MAX) return alert("Max 5MB.");
     if (!ALLOWED.includes(file.type)) return alert("Allowed: image, PDF, txt.");
     const ext = file.name.split(".").pop();
@@ -246,6 +305,7 @@ async function handleSubmitIdea() {
   if (fileInput) fileInput.value = "";
   closeProposalModal();
   await loadIdeasFeed();
+  if (isMod()) await loadModPanel();
 }
 
 async function loadIdeasFeed() {
@@ -278,6 +338,7 @@ async function loadIdeasFeed() {
   }));
 
   applyFilters();
+  renderMyIdeas();
 }
 
 function applyFilters() {
@@ -301,7 +362,9 @@ function renderFeed(items) {
     feedEl.innerHTML = `<p class="text-slate-400 font-medium col-span-full text-center py-8">No approved proposals yet.</p>`;
     return;
   }
-  feedEl.innerHTML = items.map(item => `
+  feedEl.innerHTML = items.map(item => {
+    const canDelete = currentUser && (item.user_id === currentUser.id || isMod());
+    return `
     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
       <div>
         <div class="flex items-center justify-between mb-2">
@@ -318,11 +381,75 @@ function renderFeed(items) {
       </div>
       <div class="pt-3 border-t border-slate-100 text-xs flex justify-between items-center">
         <span class="font-semibold text-slate-500">By @${escapeHtml(item.profiles?.username || "student")}</span>
-        <button onclick="openReport('idea','${item.id}')" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-flag"></i></button>
+        <div class="flex items-center space-x-3">
+          ${canDelete ? `<button onclick="deleteIdea('${item.id}')" title="Delete post" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>` : ""}
+          <button onclick="openReport('idea','${item.id}')" title="Report" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-flag"></i></button>
+        </div>
       </div>
+    </div>
+  `;
+  }).join("");
+}
+
+function renderMyIdeas() {
+  const container = document.getElementById("my-ideas-container");
+  if (!container || !currentUser) return;
+  const mine = allIdeas.filter(i => i.user_id === currentUser.id);
+  if (mine.length === 0) {
+    container.innerHTML = `<p class="text-xs text-slate-400">You haven't submitted any proposals yet.</p>`;
+    return;
+  }
+  const badgeColor = (status) => {
+    if (status === "approved") return "bg-emerald-100 text-emerald-700";
+    if (status === "rejected") return "bg-red-100 text-red-700";
+    return "bg-amber-100 text-amber-700";
+  };
+  container.innerHTML = mine.map(item => `
+    <div class="border rounded-xl p-3 bg-slate-50 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h5 class="font-bold text-xs text-slate-800 truncate">${escapeHtml(item.title)}</h5>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeColor(item.status)}">${escapeHtml(item.status)}</span>
+        </div>
+        <p class="text-[11px] text-slate-500 truncate mt-0.5">${escapeHtml(item.description)}</p>
+      </div>
+      <button onclick="deleteIdea('${item.id}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-bold shrink-0" title="Delete post">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
     </div>
   `).join("");
 }
+
+window.deleteIdea = (id) => {
+  const target = allIdeas.find(i => i.id === id) || pendingIdeas.find(i => i.id === id);
+  showConfirm(
+    "Delete Proposal?",
+    "Are you sure you want to permanently delete this proposal? This action cannot be undone.",
+    async () => {
+      if (target?.attachment_url) {
+        await supabase.storage.from("idea-attachments").remove([target.attachment_url]);
+      }
+      const { error } = await supabase.from("ideas").delete().eq("id", id);
+      if (error) return alert("Delete Error: " + error.message);
+      await loadIdeasFeed();
+      if (isMod()) await loadModPanel();
+    }
+  );
+};
+
+window.confirmDeleteAccount = () => {
+  showConfirm(
+    "Delete Account Permanently?",
+    "This will permanently delete your account, profile, badges, and all your proposals. This action cannot be undone.",
+    async () => {
+      const { error } = await supabase.rpc("delete_own_account");
+      if (error) return alert("Account Deletion Error: " + error.message);
+      await supabase.auth.signOut();
+      alert("Your account has been permanently deleted.");
+      location.reload();
+    }
+  );
+};
 
 window.filterCommittees = function (committee) {
   activeCommitteeFilter = committee;
@@ -423,13 +550,14 @@ async function loadModPanel() {
     <div class="border rounded-lg p-3 bg-amber-50">
       <div class="flex justify-between items-start">
         <div>
-          <h5 class="font-bold text-sm">${escapeHtml(p.title)} <span class="text-xs bg-blue-100 text-[#008CC3] px-2 py-0.5 rounded uppercase">${p.committee}</span></h5>
+          <h5 class="font-bold text-sm">${escapeHtml(p.title)} <span class="text-xs bg-blue-100 text-[#008CC3] px-2 py-0.5 rounded uppercase">${escapeHtml(p.committee)}</span></h5>
           <p class="text-xs text-slate-600 mt-1">${escapeHtml(p.description)}</p>
           <p class="text-[10px] text-slate-400 mt-1">by @${escapeHtml(p.profiles?.username || "?")}</p>
         </div>
         <div class="flex space-x-2 ml-2">
-          <button onclick="approveIdea('${p.id}')" class="px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded touch-btn">✓</button>
-          <button onclick="rejectIdea('${p.id}')" class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded touch-btn">✗</button>
+          <button onclick="approveIdea('${p.id}')" class="px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded touch-btn" title="Approve">✓</button>
+          <button onclick="rejectIdea('${p.id}')" class="px-3 py-1 bg-amber-600 text-white text-xs font-bold rounded touch-btn" title="Reject">✗</button>
+          <button onclick="deleteIdea('${p.id}')" class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded touch-btn" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
         </div>
       </div>
     </div>
@@ -446,7 +574,7 @@ async function loadModPanel() {
     <div class="border rounded-lg p-3 bg-red-50">
       <div class="flex justify-between items-start">
         <div>
-          <h5 class="font-bold text-sm">${escapeHtml(r.reason)} — ${r.target_type}</h5>
+          <h5 class="font-bold text-sm">${escapeHtml(r.reason)} — ${escapeHtml(r.target_type)}</h5>
           <p class="text-xs text-slate-600">${escapeHtml(r.details || "")}</p>
           <p class="text-[10px] text-slate-400">by @${escapeHtml(r.profiles?.username || "?")}</p>
         </div>
@@ -460,6 +588,7 @@ async function loadModPanel() {
 }
 
 window.approveIdea = async (id) => {
+  if (!isMod()) return;
   const { error } = await supabase.from("ideas").update({ status: "approved", reviewed_by: currentUser.id }).eq("id", id);
   if (error) return alert("Error: " + error.message);
   await loadIdeasFeed();
@@ -467,6 +596,7 @@ window.approveIdea = async (id) => {
 };
 
 window.rejectIdea = (id) => {
+  if (!isMod()) return;
   showConfirm("Reject Submission?", "Are you sure you want to reject this submission?", async () => {
     const { error } = await supabase.from("ideas").update({ status: "rejected", reviewed_by: currentUser.id }).eq("id", id);
     if (error) return alert("Error: " + error.message);
@@ -476,12 +606,14 @@ window.rejectIdea = (id) => {
 };
 
 window.resolveReport = async (id, status) => {
+  if (!isMod()) return;
   const { error } = await supabase.from("reports").update({ status, resolved_by: currentUser.id }).eq("id", id);
   if (error) return alert("Error: " + error.message);
   await loadModPanel();
 };
 
 window.assignBadge = async () => {
+  if (!isMod()) return;
   const uname = document.getElementById("badge-user-username").value.trim().replace(/^@/, "");
   const badgeId = document.getElementById("badge-select").value;
   if (!uname || !badgeId) return alert("Fill username & badge.");
@@ -497,6 +629,7 @@ window.assignBadge = async () => {
 };
 
 window.updateUserRole = async () => {
+  if (!isMod()) return;
   const uname = document.getElementById("role-username").value.trim().replace(/^@/, "");
   const role = document.getElementById("role-select").value;
   if (!uname) return alert("Enter username.");
@@ -531,8 +664,9 @@ window.submitReport = async () => {
 
 function escapeHtml(str) {
   if (!str) return "";
-  return str.replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+  return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
+
 const PRIVACY_POLICY_HTML = `
   <p class="text-xs text-slate-500"><strong>Effective date:</strong> 11/10/2026 &nbsp;|&nbsp; <strong>Data controller:</strong> UNICEF Club, American School of Dhahran (ASD) &nbsp;|&nbsp; <strong>Contact:</strong> unicef@unicef.asd</p>
   <p>This policy explains what information the UNICEF ASD Chapter Hub ("the Hub," "we," "us") collects, why, who can see it, and what you can ask us to do with it. It is consistent with ASD's privacy policy.</p>
@@ -573,11 +707,10 @@ const PRIVACY_POLICY_HTML = `
 
   <h4 class="font-bold text-slate-800 pt-2">7. Retention and deletion</h4>
   <ul class="list-disc pl-5 space-y-1">
-    <li>If you leave the club, your account is deleted, but your ideas remain unless you ask us to delete them.</li>
-    <li>You may request deletion of your ideas at any time.</li>
-    <li>Users cannot delete their own accounts. Accounts are deleted by club executives when a member is found to have left the club.</li>
-    <li>Deletion may take some time to complete, but once requested or triggered, the data will be deleted.</li>
-    <li>To request access to, correction of, or deletion of your data, contact unicef@unicef.asd.</li>
+    <li>You may delete your own proposals (both pending and approved) at any time from the feed or your Account tab.</li>
+    <li>Moderators and the President may also delete any proposal that violates club rules.</li>
+    <li>You may permanently delete your own account at any time using the "Delete Account" option in your Account tab. Deleting your account immediately removes your profile, authentication record, badges, uploaded files, and submitted proposals.</li>
+    <li>To request access to or correction of your data, contact unicef@unicef.asd.</li>
   </ul>
 
   <h4 class="font-bold text-slate-800 pt-2">8. Changes to this policy</h4>
@@ -620,10 +753,21 @@ document.addEventListener("click", (e) => {
 });
 
 window.switchTab = function (tabName) {
-  ["feed","events","spotlight","moderation","account"].forEach(t => {
+  if (tabName === "moderation" && !isMod()) {
+    tabName = "feed";
+  }
+  ["feed", "events", "spotlight", "moderation", "account"].forEach(t => {
     const sec = document.getElementById(`sec-${t}`);
     const btn = document.getElementById(`tab-btn-${t}`);
-    if (sec) sec.classList.toggle("hidden", t !== tabName);
+    if (sec) {
+      if (t === "moderation" && !isMod()) {
+        sec.classList.add("hidden");
+        sec.style.display = "none";
+      } else {
+        sec.classList.toggle("hidden", t !== tabName);
+        sec.style.display = t === tabName ? "block" : "none";
+      }
+    }
     if (btn) {
       btn.className = t === tabName
         ? "nav-tab-btn px-3 py-2 text-sm font-semibold text-[#00ADEF] border-b-2 border-[#00ADEF] whitespace-nowrap"

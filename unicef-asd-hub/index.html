@@ -47,7 +47,7 @@
     <button onclick="switchTab('feed')" id="tab-btn-feed" class="nav-tab-btn px-3 py-2 text-sm font-semibold text-[#00ADEF] border-b-2 border-[#00ADEF] whitespace-nowrap"><i class="fa-solid fa-lightbulb mr-1"></i>Proposals</button>
     <button onclick="switchTab('events')" id="tab-btn-events" class="nav-tab-btn px-3 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-calendar-days mr-1"></i>Events</button>
     <button onclick="switchTab('spotlight')" id="tab-btn-spotlight" class="nav-tab-btn px-3 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-earth-americas mr-1"></i>Spotlight</button>
-    <button onclick="switchTab('moderation')" id="tab-btn-moderation" class="nav-tab-btn hidden px-3 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-shield-halved mr-1"></i>Mod Panel</button>
+    <button onclick="switchTab('moderation')" id="tab-btn-moderation" style="display:none;" class="nav-tab-btn hidden px-3 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-shield-halved mr-1"></i>Mod Panel</button>
     <button onclick="switchTab('account')" id="tab-btn-account" class="nav-tab-btn px-3 py-2 text-sm font-semibold text-slate-600 border-b-2 border-transparent whitespace-nowrap"><i class="fa-solid fa-user-gear mr-1"></i>Account</button>
   </div>
 </nav>
@@ -104,23 +104,8 @@
     </div>
   </div>
 
-  <!-- DASHBOARD -->
+<!-- DASHBOARD -->
   <div id="website-view" class="hidden space-y-6">
-
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
-        <div class="p-3 bg-blue-50 text-[#00ADEF] rounded-xl text-xl"><i class="fa-solid fa-lightbulb"></i></div>
-        <div><p class="text-xs text-slate-500">Approved</p><h4 id="stat-approved-count" class="text-xl font-bold">0</h4></div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
-        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl"><i class="fa-solid fa-calendar-check"></i></div>
-        <div><p class="text-xs text-slate-500">Events</p><h4 id="stat-events-count" class="text-xl font-bold">0</h4></div>
-      </div>
-      <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
-        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl text-xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div><p class="text-xs text-slate-500">Pending</p><h4 id="stat-pending-count" class="text-xl font-bold">0</h4></div>
-      </div>
-    </div>
 
     <!-- FEED -->
     <section id="sec-feed" class="space-y-6">
@@ -166,8 +151,23 @@
       </div>
     </section>
 
-    <!-- MOD PANEL -->
-    <section id="sec-moderation" class="hidden space-y-6">
+    <!-- MOD PANEL (Stats + Moderation Tools) -->
+    <section id="sec-moderation" style="display:none;" class="hidden space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
+          <div class="p-3 bg-blue-50 text-[#00ADEF] rounded-xl text-xl"><i class="fa-solid fa-lightbulb"></i></div>
+          <div><p class="text-xs text-slate-500">Approved</p><h4 id="stat-approved-count" class="text-xl font-bold">0</h4></div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl"><i class="fa-solid fa-calendar-check"></i></div>
+          <div><p class="text-xs text-slate-500">Events</p><h4 id="stat-events-count" class="text-xl font-bold">0</h4></div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border flex items-center space-x-4">
+          <div class="p-3 bg-purple-50 text-purple-600 rounded-xl text-xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <div><p class="text-xs text-slate-500">Pending</p><h4 id="stat-pending-count" class="text-xl font-bold">0</h4></div>
+        </div>
+      </div>
+
       <div class="bg-white p-6 rounded-xl border space-y-6">
         <h3 class="text-xl font-bold"><i class="fa-solid fa-shield-halved text-[#00ADEF] mr-2"></i>Moderation Panel</h3>
         <div>
@@ -202,7 +202,7 @@
     </section>
 
     <!-- ACCOUNT -->
-    <section id="sec-account" class="hidden max-w-2xl mx-auto">
+    <section id="sec-account" class="hidden max-w-2xl mx-auto space-y-6">
       <div class="bg-white p-6 rounded-2xl border space-y-6">
         <h3 class="text-xl font-bold border-b pb-4">Account</h3>
         <div class="bg-slate-50 p-4 rounded-xl border space-y-2">
@@ -211,12 +211,33 @@
           <div class="flex justify-between text-xs"><span class="text-slate-500">Role:</span><span id="acc-role-display" class="font-bold">member</span></div>
           <div class="flex justify-between text-xs"><span class="text-slate-500">Badges:</span><span id="acc-badges-display" class="font-bold text-right">—</span></div>
         </div>
+
+        <!-- MY SUBMISSIONS (Approved + Pending + Rejected with Delete) -->
+        <div class="pt-4 border-t space-y-3">
+          <h4 class="font-bold text-sm">My Proposals</h4>
+          <div id="my-ideas-container" class="space-y-2"></div>
+        </div>
+
+        <!-- CHANGE PASSWORD -->
         <form id="change-pw-form" class="space-y-4 pt-4 border-t">
           <h4 class="font-bold text-sm">Change Password</h4>
           <input type="password" id="new-password" required placeholder="New password" class="w-full px-3 py-2 border rounded-lg text-sm" />
           <input type="password" id="confirm-password" required placeholder="Confirm" class="w-full px-3 py-2 border rounded-lg text-sm" />
-          <button type="submit" class="px-5 py-2 bg-[#1C2B36] text-white font-bold text-xs rounded-lg">Update</button>
+          <button type="submit" class="px-5 py-2 bg-[#1C2B36] text-white font-bold text-xs rounded-lg touch-btn">Update</button>
         </form>
+
+        <!-- DANGER ZONE: DELETE ACCOUNT -->
+        <div class="pt-4 border-t border-red-100">
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 class="font-bold text-sm text-red-700">Delete Account</h4>
+              <p class="text-xs text-red-600 mt-0.5">Permanently delete your account and all your submitted proposals. This cannot be undone.</p>
+            </div>
+            <button type="button" onclick="confirmDeleteAccount()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg touch-btn shrink-0">
+              <i class="fa-solid fa-trash-can mr-1"></i>Delete Account
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -335,6 +356,6 @@
   </div>
 </footer>
 
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>
